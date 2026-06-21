@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { getAllNovels } from "../services/novelService";
 import {
   getUserNovelEntries,
@@ -13,6 +13,7 @@ export function useNovelManager(token) {
   const [loading, setLoading] = useState(true);
   // BUG 15 FIX: Surface auth errors so consumers can redirect to login
   const [authError, setAuthError] = useState(false);
+  const isInitialLoad = useRef(true);
 
   // ----------------------------
   // Fetch global novels + user novels
@@ -20,8 +21,12 @@ export function useNovelManager(token) {
   // BUG 16 FIX: Wrapped in useCallback so it can be safely listed in useEffect deps
   const refreshData = useCallback(async () => {
     setLoading(true);
+    const grace = isInitialLoad.current
+      ? new Promise((r) => setTimeout(r, 600))
+      : Promise.resolve();
+    isInitialLoad.current = false;
     try {
-      const globalNovels = await getAllNovels();
+      const [globalNovels] = await Promise.all([getAllNovels(), grace]);
       setNovels(globalNovels);
 
       if (token) {

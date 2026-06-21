@@ -9,3 +9,15 @@ body {
 button, a, select, input {
   -webkit-tap-highlight-color: transparent;
 }
+
+@keyframes skeletonShimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0eeec 25%, #e8e5e3 50%, #f0eeec 75%);
+  background-size: 800px 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}

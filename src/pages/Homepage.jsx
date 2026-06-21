@@ -32,9 +32,10 @@ function Homepage() {
   useEffect(() => {
     if (!isLoggedIn) return;
 
+    const API_URL = import.meta.env.VITE_API_BASE_URL;
     const fetchUser = async () => {
       try {
-        const res = await axios.get("/api/auth/me");
+        const res = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
         if (res.data?.user?.avatar) {
           setAvatar(res.data.user.avatar);
         }
@@ -147,18 +148,44 @@ function Homepage() {
     ? ["", "Reading", "Completed", "Plan To Read"]
     : ["", "Ongoing", "Upcoming", "Completed"];
 
+  const SKELETON_ROWS = [
+    { title: "70%", author: "38%" },
+    { title: "52%", author: "28%" },
+    { title: "78%", author: "42%" },
+    { title: "61%", author: "32%" },
+    { title: "74%", author: "36%" },
+    { title: "48%", author: "26%" },
+  ];
+
   if (loading) {
     return (
-      <div
-        className="page-container"
-        style={{
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        Loading...
+      <div className="page-container">
+        <div className="page-header">
+          <h2 className="page-title">MyNovelList</h2>
+          <div className={`skeleton ${isLoggedIn ? "skeleton-user-chip" : "skeleton-login-btn"}`} />
+        </div>
+
+        <div className="skeleton skeleton-filter-bar" />
+
+        <div className="skeleton-table-container">
+          <div className="skeleton-thead">
+            <div className="skeleton skeleton-th" style={{ width: 36 }} />
+            <div className="skeleton skeleton-th" style={{ flex: 1 }} />
+            <div className="skeleton skeleton-th" style={{ width: 64 }} />
+            <div className="skeleton skeleton-th" style={{ width: 80 }} />
+          </div>
+          {SKELETON_ROWS.map((row, i) => (
+            <div className="skeleton-row" key={i}>
+              <div className="skeleton skeleton-cell-index" />
+              <div className="skeleton-cell-title">
+                <div className="skeleton skeleton-cell-title-line" style={{ width: row.title }} />
+                <div className="skeleton skeleton-cell-title-sub" style={{ width: row.author }} />
+              </div>
+              <div className="skeleton skeleton-cell-score" />
+              <div className="skeleton skeleton-cell-status" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

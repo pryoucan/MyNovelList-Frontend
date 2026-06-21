@@ -39,6 +39,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: 28px;
   height: 28px;
   background-color: #221f1e;
@@ -614,4 +615,147 @@
     align-items: flex-start;
     gap: 0.25rem;
   }
+}
+
+/* ── Homepage Skeleton ── */
+
+.skeleton-filter-bar {
+  width: 260px;
+  height: 44px;
+  border-radius: 14px;
+  margin: 1.25rem 0 2rem;
+}
+
+.skeleton-table-container {
+  width: 100%;
+  border: 1px solid #dcdadb;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
+}
+
+.skeleton-thead {
+  display: flex;
+  align-items: center;
+  padding: 0.9rem 1.25rem;
+  background-color: #faf9f9;
+  border-bottom: 1px solid #f1eeec;
+  gap: 1rem;
+}
+
+.skeleton-th {
+  height: 11px;
+  border-radius: 4px;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid #f1eeec;
+  gap: 1rem;
+}
+
+.skeleton-row:last-child {
+  border-bottom: none;
+}
+
+.skeleton-cell-index {
+  width: 28px;
+  height: 13px;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.skeleton-cell-title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeleton-cell-title-line {
+  height: 15px;
+  border-radius: 5px;
+}
+
+.skeleton-cell-title-sub {
+  height: 11px;
+  border-radius: 4px;
+}
+
+.skeleton-cell-score {
+  width: 28px;
+  height: 13px;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.skeleton-cell-status {
+  width: 90px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 12px;
+}
+
+.skeleton-user-chip {
+  width: 120px;
+  height: 36px;
+  border-radius: 20px;
+}
+
+.skeleton-login-btn {
+  width: 68px;
+  height: 34px;
+  border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+  .skeleton-filter-bar {
+    width: 100%;
+  }
+
+  .skeleton-user-chip {
+    width: 90px;
+    height: 32px;
+  }
+
+  .skeleton-thead {
+    display: none;
+  }
+
+  .skeleton-row {
+    padding: 1.1rem 1rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 16px;
+    row-gap: 6px;
+  }
+
+  .skeleton-cell-index {
+    grid-column: 1;
+    grid-row: 1;
+    width: 40px;
+    height: 10px;
+  }
+
+  .skeleton-cell-title {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .skeleton-cell-score {
+    display: none;
+  }
+
+  .skeleton-cell-status {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+    width: 80px;
+    height: 34px;
+  }
+}
 }

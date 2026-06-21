@@ -88,12 +88,14 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
+        const [res] = await Promise.all([
+          axios.get(`${API_URL}/api/auth/me`, { withCredentials: true }),
+          new Promise((r) => setTimeout(r, 600)),
+        ]);
         setUser(res.data.user);
       } catch (err) {
         console.error("Failed to fetch profile:", err);
         setError("Session expired. Please log in again.");
-        // If 401, clear local storage and redirect to login
         if (err.response?.status === 401) {
           localStorage.removeItem("token");
           localStorage.removeItem("displayUsername");
@@ -109,8 +111,30 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="page-container" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-        <div className="page-loading">Loading Profile...</div>
+      <div className="page-container">
+        <div className="page-header" style={{ marginBottom: "2rem" }}>
+          <h2 className="page-title">MyNovelList</h2>
+          <div className="skeleton" style={{ width: 90, height: 34, borderRadius: 12 }} />
+        </div>
+        <div className="profile-container">
+          <div className="profile-skeleton-card">
+            <div className="profile-skeleton-header">
+              <div className="skeleton skeleton-avatar" />
+              <div className="skeleton-identity">
+                <div className="skeleton skeleton-name" />
+                <div className="skeleton skeleton-badge" />
+              </div>
+            </div>
+            <div className="profile-skeleton-body">
+              {[{ w: "55%" }, { w: "40%" }, { w: "30%" }, { w: "45%" }].map((item, i) => (
+                <div className="skeleton-info-item" key={i}>
+                  <div className="skeleton skeleton-label" />
+                  <div className="skeleton skeleton-value" style={{ width: item.w }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
