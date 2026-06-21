@@ -4,6 +4,8 @@ import axios from "axios";
 import "../design/Homepage.css";
 import "../design/Profile.css";
 
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 const compressImage = (file, maxWidth, maxHeight, quality) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -73,7 +75,7 @@ export default function Profile() {
     try {
       // Compress to max 200x200 pixels at 80% JPEG quality
       const compressedBase64 = await compressImage(file, 200, 200, 0.8);
-      const res = await axios.put("/api/auth/profile", { avatar: compressedBase64 });
+      const res = await axios.put(`${API_URL}/api/auth/profile`, { avatar: compressedBase64 }, { withCredentials: true });
       setUser(res.data.user);
     } catch (err) {
       console.error("Failed to upload avatar:", err);
@@ -86,7 +88,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("/api/auth/me");
+        const res = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
         setUser(res.data.user);
       } catch (err) {
         console.error("Failed to fetch profile:", err);
