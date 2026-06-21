@@ -1,0 +1,146 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 380px;
+  padding: 2.5rem 2rem;
+  border: 1px solid #dcdadb;
+  border-radius: 20px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+}
+
+.auth-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.auth-title-reset {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 4rem;
+  text-align: center;
+}
+
+.auth-title-reset-para {
+  font-size: .9rem;
+  color: #6b7280;;
+  text-align: center;
+  margin-top: -3rem;
+}
+
+.auth-form {
+  margin-top: 3rem;
+  width: 100%;
+}
+
+.auth-input {
+  display: block;
+  width: 95%;
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.875rem;
+  border: 1px solid #dcdadb;
+  border-radius: 10px;
+  background-color: #faf9f9;
+  color: #221f1e;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+
+.auth-input:focus {
+  outline: none;
+  border-color: #000;
+  background: #f9f7f7;
+}
+
+.auth-forgot-link {
+  display: flex;
+  /* BUG 23 FIX: "right" is not a valid value for justify-content/align-items */
+  justify-content: flex-end;
+  align-items: center;
+  font-size: .9rem;
+}
+
+/* BUG 24 FIX: Added missing classes used by VerifyOtp.jsx */
+.auth-re-otp {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8rem;
+  text-align: right;
+}
+
+.auth-re-otp-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #374151;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.auth-re-otp-btn:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.auth-re-otp-btn:hover:not(:disabled) {
+  color: #000;
+}
+
+.auth-error {
+  font-size: 0.75rem;
+  color: #b91c1c;
+  margin-bottom: 0.75rem;
+}
+
+.auth-submit-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.auth-submit {
+  margin-top: .8rem;
+  min-width: 7rem;
+  text-align: center;
+  height: 42px;
+  cursor: pointer;
+  font-size: .95rem;
+  font-weight: 500;
+  background: #221f1e;
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.auth-submit:hover {
+  background: #383331;
+}
+
+.auth-submit:active {
+  transform: scale(0.98);
+}
+
+.auth-footer {
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  text-align: center;
+  color: #374151;
+}
+
+.auth-link {
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}

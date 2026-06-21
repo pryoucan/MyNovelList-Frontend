@@ -1,0 +1,34 @@
+.notfound {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  text-align: center;
+}
+
+.notfound-code {
+  font-size: 120px;
+  font-weight: 700;
+  letter-spacing: -4px;
+  line-height: 1;
+  margin: 0;
+}
+
+.notfound-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #777;
+}
+
+.notfound-link {
+  margin-top: 10px;
+  font-size: 13px;
+  text-decoration: underline;
+  color: inherit;
+}
+
+.notfound-link:hover {
+  opacity: 0.7;
+}
