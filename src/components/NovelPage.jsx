@@ -11,6 +11,7 @@ import ViewableImage from "../components/ViewableImage";
 import StarRating from "../components/StarRating";
 import StatusIcon from "../components/StatusIcon";
 import PublicationIcon from "../components/PublicationIcon";
+import NovelReviews from "../components/NovelReviews";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 
 import {
@@ -423,6 +424,8 @@ function NovelPage() {
           <p className="synopsis-text entry-muted">No synopsis available.</p>
         )}
       </article>
+
+      <NovelReviews key={novelId} novelId={novelId} />
 
       {/* ================= The Modal ================= */}
       {/* BUG 26 FIX: Explicit props instead of {...entryForm} spread,
