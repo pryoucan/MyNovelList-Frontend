@@ -29,10 +29,18 @@ export const formatField = (field, value) => {
     case "chapterCount":
       return Number(value).toLocaleString();
     case "genres":
+    case "tags":
       return Array.isArray(value) ? value.join(", ") : String(value);
     default:
       return String(value);
   }
+};
+
+// Every value of a list field (genres, tags) used in the catalogue, most common first.
+export const popularValues = (novels, key) => {
+  const counts = new Map();
+  for (const n of novels) for (const v of n[key] ?? []) counts.set(v, (counts.get(v) ?? 0) + 1);
+  return [...counts].sort((a, b) => b[1] - a[1]).map(([v]) => v);
 };
 
 export const formatDate = (iso) =>

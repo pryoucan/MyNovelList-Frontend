@@ -9,6 +9,7 @@ import StatusIcon from "../components/StatusIcon";
 import { getUserNovelEntries } from "../services/userNovelService";
 import { logout } from "../utils/auth";
 import { setCurrentUser } from "../hooks/useCurrentUser";
+import BackArrow from "../components/BackArrow";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 const STATUSES = ["Reading", "Completed", "On Hold", "Plan To Read", "Dropped"];
@@ -216,7 +217,7 @@ export default function Profile() {
     <div className="page-container">
       <Header />
       <Link to="/" className="back-link">
-        <span aria-hidden="true">←</span> Back to list
+        <BackArrow /> Back to list
       </Link>
 
       <div className="profile-layout">

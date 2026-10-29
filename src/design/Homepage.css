@@ -209,6 +209,7 @@
 
 .table-container {
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid #dcdadb;
   border-radius: 16px;
   overflow: hidden;
@@ -284,6 +285,16 @@
   padding: 3rem 1.5rem;
   color: #6b7280;
   font-size: 0.95rem;
+}
+
+.empty-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0.9rem;
+  font-size: 0.88rem;
 }
 
 /* ── View tabs: All novels / My list (underline tabs under the header) ── */
@@ -514,8 +525,8 @@
 
   .filter-btn {
     flex-shrink: 0;
-    padding: 6px 14px;
-    font-size: 0.8rem;
+    padding: 6px 12px;
+    font-size: 0.78rem;
   }
 
   /* User chip trigger adjustments for smaller screens */
@@ -563,22 +574,24 @@
     box-sizing: border-box;
   }
 
-  .novel-table th {
-    display: none; /* Hide standard headers on mobile */
+  /* Hide the header row entirely (hiding only the cells left an empty row). */
+  .novel-table thead {
+    display: none;
   }
 
+  /* Title gets the full width; the Add/status button sits beside the scores. */
   .novel-table tr {
-    padding: 1.25rem 1rem;
+    padding: 0.85rem 0.9rem;
     border-bottom: 1px solid #f1eeec;
     display: grid;
     grid-template-areas:
-      "cover  title  status"
+      "cover  title      title"
       "cover  community  status"
-      "cover  score  status";
+      "cover  score      status";
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    column-gap: 16px;
-    row-gap: 4px;
+    column-gap: 12px;
+    row-gap: 2px;
     background: #ffffff;
   }
 
@@ -599,14 +612,24 @@
     color: #221f1e;
   }
 
-  /* Cover cell */
+  /* Cover cell: pinned to the top so it lines up with the title, however
+     many lines the title wraps to. */
   .novel-table td:nth-child(1) {
     grid-area: cover;
-    align-self: center;
+    align-self: start;
+  }
+
+  /* Only real cover cells: the empty-state message is also a first cell. */
+  .novel-table td.cover-td {
+    line-height: 0;
+  }
+
+  .novel-table td.cover-td a {
+    display: block;
   }
 
   .novel-table .novel-thumb {
-    --thumb-w: 46px;
+    --thumb-w: 44px;
   }
 
   /* Title and Author cell style */
@@ -616,26 +639,31 @@
     overflow-wrap: anywhere;
   }
 
+  /* Long titles stop at two lines. */
   .title-td .novel-link {
-    font-size: 0.95rem !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 0.9rem !important;
     font-weight: 600;
-    line-height: 1.35;
+    line-height: 1.3;
     color: #221f1e;
   }
 
   .author {
-    font-size: 0.8rem !important;
+    font-size: 0.76rem !important;
     color: #6b7280;
-    margin-top: 2px;
+    margin-top: 1px;
   }
 
   /* Community score cell style */
   .novel-table td:nth-child(3) {
     grid-area: community;
-    font-size: 0.825rem !important;
+    font-size: 0.76rem !important;
     font-weight: 500;
     color: #5c5957;
-    margin-top: 2px;
+    margin-top: 4px;
   }
 
   .novel-table td:nth-child(3)::before {
@@ -647,7 +675,7 @@
   /* Personal score cell style */
   .novel-table td:nth-child(4) {
     grid-area: score;
-    font-size: 0.825rem !important;
+    font-size: 0.76rem !important;
     font-weight: 500;
     color: #5c5957;
   }
@@ -668,6 +696,26 @@
   .novel-table td.empty-state {
     grid-column: 1 / -1;
     grid-row: 1 / -1;
+  }
+
+  .novel-table .add-btn {
+    min-width: 0;
+    height: 1.9rem;
+    padding: 0 12px;
+    font-size: 0.76rem;
+  }
+
+  .novel-table .status-chip {
+    height: 1.9rem;
+    font-size: 0.78rem;
+  }
+
+  .toolbar {
+    margin-bottom: 1rem;
+  }
+
+  .view-tab {
+    font-size: 0.88rem;
   }
 
   .status-btn-Completed,
@@ -693,8 +741,11 @@
   }
 
 
+  /* nowrap: a wrapping column sizes itself to its widest child, which let the
+     status filters widen the whole page instead of scrolling on their own. */
   .toolbar {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
   }
 

@@ -307,6 +307,15 @@ a.req-item-name:hover {
   color: #5c5957;
 }
 
+.req-tags--minor {
+  margin-top: 6px;
+}
+
+.req-tags--minor li {
+  border-style: dashed;
+  background: #fff;
+}
+
 .req-synopsis {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -802,5 +811,129 @@ a.sp-recent-title:hover {
 @media (max-width: 480px) {
   .sp-counts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── NovelUpdates import ── */
+.req-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.imp-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #57534e;
+  line-height: 1.5;
+}
+
+.imp-steps li + li {
+  margin-top: 1.25rem;
+}
+
+.imp-steps strong {
+  color: #221f1e;
+}
+
+.imp-step-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0.6rem;
+}
+
+.imp-bookmarklet {
+  cursor: grab;
+}
+
+.imp-hint {
+  font-size: 0.82rem;
+  color: #888685;
+}
+
+.imp-search {
+  flex: 1 1 14rem;
+  max-width: 22rem;
+}
+
+.imp-notes {
+  margin: 0 0 1.5rem;
+}
+
+.imp-notes ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+
+/* ── Pagination ── */
+.req-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.5rem 0 2rem;
+}
+
+.req-pagination-range {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.req-pagination-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.req-page-btn {
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 10px;
+  border: 1px solid #dcdadb;
+  border-radius: 10px;
+  background: #fff;
+  color: #221f1e;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.req-page-btn:hover:not(:disabled):not(.is-current) {
+  background: #faf9f9;
+  border-color: #c8c5c3;
+}
+
+.req-page-btn.is-current {
+  border-color: #221f1e;
+  background: #221f1e;
+  color: #fff;
+  cursor: default;
+}
+
+.req-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.req-page-btn:focus-visible {
+  outline: 2px solid #221f1e;
+  outline-offset: 2px;
+}
+
+.req-page-gap {
+  padding: 0 2px;
+  color: #888685;
+}
+
+@media (max-width: 480px) {
+  .req-pagination {
+    justify-content: center;
   }
 }

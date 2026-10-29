@@ -7,6 +7,7 @@ import "../design/Homepage.css";
 import "../design/status.css";
 import "../design/Profile.css";
 import "../design/PublicProfile.css";
+import BackArrow from "../components/BackArrow";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 const STATUSES = ["Reading", "Completed", "On Hold", "Plan To Read", "Dropped"];
@@ -41,7 +42,7 @@ function PublicProfileContent({ username }) {
   return (
     <div className="page-container">
       <Header />
-      <Link to="/" className="back-link"><span aria-hidden="true">←</span> Back to list</Link>
+      <Link to="/" className="back-link"><BackArrow /> Back to list</Link>
       {loading ? (
         <p className="profile-page-error" role="status">Loading profile…</p>
       ) : !user ? (

@@ -126,3 +126,137 @@
     opacity: 1;
   }
 }
+
+/* ── "Already on MyNovelList — replace?" ── */
+.replace-existing {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid #ecebeb;
+  border-radius: 14px;
+  background: #faf9f9;
+}
+
+.replace-existing > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.replace-existing-title {
+  font-weight: 600;
+  color: #221f1e;
+  text-decoration: none;
+}
+
+.replace-existing-title:hover {
+  text-decoration: underline;
+}
+
+.replace-existing-author {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.replace-error {
+  margin: -12px 0 16px;
+  color: var(--status-dropped);
+  font-size: 0.88rem;
+}
+
+.confirm-btn-primary:disabled,
+.confirm-btn-secondary:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+@media (max-width: 480px) {
+  .confirm-modal.replace-modal {
+    width: 100%;
+    padding: 1.5rem;
+  }
+
+  .replace-modal .confirm-actions {
+    flex-direction: column-reverse;
+  }
+}
+
+/* ── Cover from Wuxiaworld ── */
+.ww-compare {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 8px 0 16px;
+}
+
+.ww-compare figure {
+  margin: 0;
+  text-align: center;
+}
+
+.ww-compare figcaption {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: #888685;
+}
+
+.ww-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #faf9f9;
+}
+
+.ww-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ww-cover--empty {
+  border: 1px dashed #dcdadb;
+  font-size: 0.82rem;
+  color: #888685;
+}
+
+.ww-arrow {
+  color: #b0aeac;
+  font-size: 1.25rem;
+}
+
+.ww-message {
+  margin-bottom: 10px;
+}
+
+.ww-link {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.ww-link .nf-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ww-error {
+  margin: -10px 0 16px;
+}
+
+@media (max-width: 480px) {
+  .confirm-modal.ww-modal {
+    width: 100%;
+    padding: 1.5rem;
+  }
+
+  .ww-cover {
+    width: 96px;
+  }
+}

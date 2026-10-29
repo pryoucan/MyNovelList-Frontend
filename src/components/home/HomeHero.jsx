@@ -35,7 +35,7 @@ export default function HomeHero({ isLoggedIn, search, onSearch, onSubmit, novel
         value={search}
         onChange={onSearch}
         onSubmit={onSubmit}
-        placeholder={`Search ${novels.length} novels by title or author`}
+        placeholder="Search title or author"
       />
     </section>
   );

@@ -225,9 +225,44 @@
 }
 
 .search-suggest-empty {
-  padding: 14px 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 8px 10px 12px;
   font-size: 0.88rem;
   color: #6b7280;
+}
+
+/* Small outlined "+ Suggest" button (search dropdown, empty list). */
+.suggest-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  height: 1.9rem;
+  padding: 0 12px;
+  border: 1px solid #dcdadb;
+  border-radius: 999px;
+  background: #fff;
+  color: #221f1e;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.suggest-btn:hover {
+  border-color: #221f1e;
+  background: #221f1e;
+  color: #fff;
+}
+
+.suggest-btn:focus-visible {
+  outline: 2px solid #221f1e;
+  outline-offset: 2px;
 }
 
 .search-suggest-foot {
@@ -351,12 +386,12 @@
   color: #5c5957;
 }
 
+/* Directly under the status/progress, not pushed to the card's bottom edge. */
 .continue-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: auto;
 }
 
 .continue-plus {
@@ -539,36 +574,6 @@
   scroll-margin-top: 1rem;
 }
 
-/* Sits on the tab row, right-aligned */
-.suggest-link {
-  position: absolute;
-  top: -12px;
-  right: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 2.1rem;
-  padding: 0 14px;
-  border: 1px solid #dcdadb;
-  border-radius: 999px;
-  background: #fff;
-  color: #221f1e;
-  font-size: 0.85rem;
-  font-weight: 550;
-  text-decoration: none;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.suggest-link:hover {
-  border-color: #221f1e;
-  background: #faf9f9;
-}
-
-.suggest-link:focus-visible {
-  outline: 2px solid #221f1e;
-  outline-offset: 2px;
-}
-
 .list-heading {
   margin: 0 0 1rem;
   font-size: 1.2rem;
@@ -610,25 +615,40 @@
 ================================ */
 
 @media (max-width: 600px) {
-  .suggest-link {
-    position: static;
-    display: flex;
-    width: max-content;
-    max-width: 100%;
-    margin: 0 0 1.25rem auto;
-  }
-
   .home-hero-actions {
     flex-wrap: wrap;
   }
 
+  .home-hero {
+    margin-bottom: 2.25rem;
+  }
+
   .home-hero-banner {
-    min-height: 19rem;
-    border-radius: 22px;
+    min-height: 0;
+    border-radius: 20px;
   }
 
   .home-hero-copy {
-    padding: 1.75rem 1.5rem 5rem;
+    padding: 1.5rem 1.25rem 2.5rem;
+  }
+
+  .home-hero-title {
+    font-size: 1.6rem;
+  }
+
+  .home-hero-actions {
+    gap: 0.9rem;
+    margin-top: 1.1rem;
+  }
+
+  .home-hero-cta {
+    height: 2.4rem;
+    padding: 0 1rem;
+    font-size: 0.85rem;
+  }
+
+  .home-hero-link {
+    font-size: 0.85rem;
   }
 
   /* The centred crop puts the scene behind the headline; fade the top so text stays readable. */
@@ -645,19 +665,116 @@
   }
 
   .home-hero-sub {
-    font-size: 0.92rem;
+    margin-top: 0.6rem;
+    font-size: 0.86rem;
   }
 
+  /* Below the banner instead of overlapping it: there's no room to overlap neatly. */
   .home-search {
-    height: 3.2rem;
+    width: 100%;
+    height: 2.9rem;
+    margin: 0.75rem 0 0;
+    padding: 0 0.3rem 0 0.9rem;
+    box-shadow: 0 6px 18px rgba(34, 31, 30, 0.08);
+  }
+
+  /* 16px keeps iOS from zooming in when the field is focused. */
+  .home-search-input {
+    font-size: 1rem;
   }
 
   .home-search-btn {
+    height: 2.3rem;
     padding: 0 0.95rem;
+    font-size: 0.82rem;
+  }
+
+  .home-section {
+    margin-bottom: 2rem;
   }
 
   .home-section-head {
     flex-direction: column;
     gap: 2px;
+    margin-bottom: 0.75rem;
+  }
+
+  .home-section-title,
+  .list-heading {
+    font-size: 1.05rem;
+  }
+
+  .home-section-note {
+    font-size: 0.75rem;
+  }
+
+  /* Popular */
+  .popular-grid {
+    gap: 8px;
+  }
+
+  .popular-card {
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .popular-rank {
+    width: 1.1rem;
+    font-size: 1.05rem;
+  }
+
+  .popular-card .novel-thumb {
+    --thumb-w: 40px;
+  }
+
+  .popular-title {
+    font-size: 0.86rem;
+  }
+
+  .popular-author {
+    font-size: 0.76rem;
+  }
+
+  .popular-meta {
+    font-size: 0.74rem;
+  }
+
+  /* Continue reading */
+  .continue-card {
+    gap: 12px;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .continue-thumb .novel-thumb {
+    --thumb-w: 50px;
+  }
+
+  .continue-title {
+    font-size: 0.88rem;
+  }
+
+  /* Genres */
+  .genre-chips {
+    gap: 6px;
+  }
+
+  .genre-chip {
+    gap: 6px;
+    height: 2rem;
+    padding: 0 6px 0 12px;
+    font-size: 0.8rem;
+  }
+
+  .genre-chip-count {
+    min-width: 1.3rem;
+    padding: 1px 5px;
+    font-size: 0.68rem;
+  }
+
+  .active-genre {
+    height: 2.2rem;
+    font-size: 0.8rem;
   }
 }

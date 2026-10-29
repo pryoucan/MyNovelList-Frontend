@@ -4,6 +4,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
+  /* Stop mobile browsers from enlarging text on their own. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 button, a, select, input {
@@ -20,6 +23,17 @@ input[type="date"]::-webkit-datetime-edit,
 input[type="date"]::-webkit-datetime-edit-fields-wrapper {
   font-family: inherit;
   font-variant-numeric: tabular-nums;
+}
+
+/* Scrolling inside a modal never carries over to the page behind it. */
+.modal-overlay,
+.modal,
+.confirm-overlay,
+.confirm-modal,
+.sp-overlay,
+.sp-panel,
+.iv-overlay {
+  overscroll-behavior: contain;
 }
 
 @keyframes skeletonShimmer {

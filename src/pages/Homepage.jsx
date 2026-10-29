@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AddNovelModal } from "../components/AddNovelModal";
 import NovelThumb from "../components/NovelThumb";
@@ -12,6 +12,7 @@ import GenreChips from "../components/home/GenreChips";
 import { getNovelStats } from "../services/novelService";
 import { useNovelEntry, buildEntryPayload } from "../hooks/useNovelEntry";
 import { useNovelManager } from "../hooks/useNovelManager";
+import { suggestNovelPath } from "../utils/suggestLink";
 import "../design/Homepage.css";
 import "../design/status.css";
 import "../design/Home.css";
@@ -78,6 +79,23 @@ function Homepage() {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     listRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
   };
+
+  // Switching between "All novels" and "My list" adds or removes the sections
+  // above the list, which would leave the page scrolled somewhere unrelated.
+  // Keep the tab row at the same spot on screen instead.
+  const tabAnchor = useRef(null);
+  const switchView = (to) => {
+    const top = listRef.current?.getBoundingClientRect().top;
+    tabAnchor.current = top == null ? null : Math.max(0, top);
+    navigate(to);
+  };
+
+  useLayoutEffect(() => {
+    if (tabAnchor.current == null || !listRef.current) return;
+    const listTop = listRef.current.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, listTop - tabAnchor.current) });
+    tabAnchor.current = null;
+  }, [viewKey]);
 
   const pickGenre = (next) => {
     setGenre(next);
@@ -245,24 +263,19 @@ function Homepage() {
       )}
 
       <section className="list-section" ref={listRef} aria-label="Novel list">
-      {isLoggedIn && (
-        <Link to="/suggest" className="suggest-link">
-          <span aria-hidden="true">+</span> Suggest a novel
-        </Link>
-      )}
       {isLoggedIn ? (
         <nav className="view-tabs" aria-label="Choose list">
           <button
             className={`view-tab${showReadingListOnly ? "" : " active"}`}
             aria-current={showReadingListOnly ? undefined : "page"}
-            onClick={() => navigate("/")}
+            onClick={() => switchView("/")}
           >
             All novels
           </button>
           <button
             className={`view-tab${showReadingListOnly ? " active" : ""}`}
             aria-current={showReadingListOnly ? "page" : undefined}
-            onClick={() => navigate("/?view=readinglist")}
+            onClick={() => switchView("/?view=readinglist")}
           >
             My list <span className="view-tab-count">{listCount}</span>
           </button>
@@ -328,6 +341,18 @@ function Homepage() {
               <tr>
                 <td colSpan="5" className="empty-state">
                   {emptyMessage}
+                  {!showReadingListOnly && search.trim() && (
+                    <div className="empty-suggest">
+                      <span>Can't find it?</span>
+                      <Link to={suggestNovelPath(search)} className="suggest-btn">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden="true">
+                          <path d="M12 5v14" />
+                          <path d="M5 12h14" />
+                        </svg>
+                        Suggest a novel
+                      </Link>
+                    </div>
+                  )}
                 </td>
               </tr>
             ) : (

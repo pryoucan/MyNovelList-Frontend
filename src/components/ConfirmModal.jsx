@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useScrollLock } from "../hooks/useScrollLock";
 import "../design/ConfirmModal.css";
 
 function ConfirmModal({
@@ -10,17 +10,7 @@ function ConfirmModal({
   onConfirm,
   onClose,
 }) {
-  // Prevent background scrolling when open
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
+  useScrollLock(open);
 
   if (!open) return null;
 

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import RequestStatusBadge from "./RequestStatusBadge";
 import { getSubmitterProfile } from "../services/requestService";
 import { formatDate } from "../utils/novelFields";
+import { useScrollLock } from "../hooks/useScrollLock";
 
 // Side panel with a submitter's track record, opened from a request card.
 // Shows contribution info only — no email or phone.
@@ -11,6 +12,7 @@ export default function SubmitterPanel({ userId, onClose }) {
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState("");
   const closeRef = useRef(null);
+  useScrollLock();
 
   useEffect(() => {
     let current = true;

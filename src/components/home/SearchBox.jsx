@@ -1,7 +1,8 @@
 import { useDeferredValue, useId, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import NovelThumb from "../NovelThumb";
 import StatusIcon from "../StatusIcon";
+import { suggestNovelPath } from "../../utils/suggestLink";
 
 const MAX_SUGGESTIONS = 6;
 
@@ -138,7 +139,21 @@ export default function SearchBox({ novels, userEntries, stats, value, onChange,
             {query ? "Novels" : "Popular right now"}
           </div>
           {suggestions.length === 0 ? (
-            <div className="search-suggest-empty">No novels match “{deferred.trim()}”</div>
+            <div className="search-suggest-empty">
+              <span>No novels match “{deferred.trim()}”</span>
+              <Link
+                to={suggestNovelPath(deferred)}
+                className="suggest-btn"
+                // Keep focus in the input so the list doesn't close before the click.
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden="true">
+                  <path d="M12 5v14" />
+                  <path d="M5 12h14" />
+                </svg>
+                Suggest it
+              </Link>
+            </div>
           ) : (
             suggestions.map(({ novel, field }, i) => {
               const entry = userEntries[novel.id];

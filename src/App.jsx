@@ -13,10 +13,13 @@ import { NovelPage } from "./components/NovelPage.jsx";
 import SuggestNovel from "./pages/SuggestNovel.jsx";
 import MySubmissions from "./pages/MySubmissions.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import ImportNovel from "./pages/ImportNovel.jsx";
+import ScrollManager from "./components/ScrollManager.jsx";
 
 export default function App() {
   return (
       <BrowserRouter>
+        <ScrollManager />
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route path="/novel/:novelId" element={<NovelPage />} />
@@ -24,6 +27,7 @@ export default function App() {
           <Route path="/suggest" element={<SuggestNovel mode="new" />} />
           <Route path="/submissions" element={<MySubmissions />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/import" element={<ImportNovel />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />

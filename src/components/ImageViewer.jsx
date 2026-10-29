@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useScrollLock } from "../hooks/useScrollLock";
 import "../design/ImageViewer.css";
 
 // Full-size image overlay. `images` is [{ src, label? }]; two images are shown
@@ -7,6 +8,8 @@ import "../design/ImageViewer.css";
 // backdrop closes it; focus moves in and back to whatever opened it.
 export default function ImageViewer({ images, title, onClose }) {
   const closeRef = useRef(null);
+
+  useScrollLock();
 
   useEffect(() => {
     const opener = document.activeElement;
@@ -19,12 +22,9 @@ export default function ImageViewer({ images, title, onClose }) {
         closeRef.current?.focus();
       }
     };
-    const { overflow } = document.body.style;
-    document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = overflow;
       opener?.focus?.();
     };
   }, [onClose]);

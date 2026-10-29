@@ -12,6 +12,7 @@ import StarRating from "../components/StarRating";
 import StatusIcon from "../components/StatusIcon";
 import PublicationIcon from "../components/PublicationIcon";
 import NovelReviews from "../components/NovelReviews";
+import WuxiaworldCover from "../components/WuxiaworldCover";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { getNovelStatsById } from "../services/novelService";
 
@@ -22,12 +23,14 @@ import {
   deleteUserNovelEntry,
 } from "../services/userNovelService";
 import { useNovelEntry, buildEntryPayload } from "../hooks/useNovelEntry";
+import BackArrow from "./BackArrow";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 const LANGUAGES = { zh: "Chinese (Mandarin)", en: "English" };
 // Synopses longer than this start collapsed.
 const SYNOPSIS_PREVIEW_CHARS = 420;
+const TAGS_PREVIEW = 20;
 
 const statusSlug = (status) => status.toLowerCase().split(" ").join("-");
 
@@ -59,6 +62,7 @@ function NovelPage() {
   const [showModal, setShowModal] = useState(false);
   const [coverError, setCoverError] = useState(false);
   const [synopsisOpen, setSynopsisOpen] = useState(false);
+  const [tagsOpen, setTagsOpen] = useState(false);
   const currentUser = useCurrentUser();
   // Inline rating on the entry card: "idle" | "saving" | "saved" | "error"
   const [ratingSave, setRatingSave] = useState("idle");
@@ -124,21 +128,21 @@ function NovelPage() {
   // ----------------------------
   // 1. Fetch GLOBAL novel details
   // ----------------------------
-  useEffect(() => {
-    const fetchGlobalNovel = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/novels/${novelId}`);
-        setGlobalNovel(res.data.novel);
-        setCoverError(false);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingGlobal(false);
-      }
-    };
-
-    fetchGlobalNovel();
+  const fetchGlobalNovel = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/novels/${novelId}`);
+      setGlobalNovel(res.data.novel);
+      setCoverError(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingGlobal(false);
+    }
   }, [novelId]);
+
+  useEffect(() => {
+    fetchGlobalNovel();
+  }, [fetchGlobalNovel]);
 
   // ----------------------------
   // 2. Fetch USER novel entry (if logged in)
@@ -226,7 +230,7 @@ function NovelPage() {
       <Header />
 
       <Link to="/" className="back-link">
-        <span aria-hidden="true">←</span> Back to list
+        <BackArrow /> Back to list
       </Link>
 
       {/* ================= Header Section ================= */}
@@ -260,7 +264,7 @@ function NovelPage() {
             </p>
 
             {globalNovel.genres?.length > 0 && (
-              <ul className="tag-list" aria-label="Tags">
+              <ul className="tag-list" aria-label="Genres">
                 {globalNovel.genres.map((genre) => (
                   <li key={genre} className="tag-chip">{genre}</li>
                 ))}
@@ -365,14 +369,21 @@ function NovelPage() {
       </header>
 
       {/* ================= Details ================= */}
+      {token && (
+        <div className="novel-actions">
+          {currentUser?.role === "ADMIN" && <WuxiaworldCover novel={globalNovel} onSaved={fetchGlobalNovel} />}
+          <Link to={`/novel/${novelId}/suggest-edit`} className="page-action">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+            {currentUser?.role === "ADMIN" ? "Edit details" : "Suggest an edit"}
+          </Link>
+        </div>
+      )}
       <section className="novel-card" aria-labelledby="details-title">
         <div className="novel-card-head">
           <h2 className="section-title" id="details-title">Details</h2>
-          {token && (
-            <Link to={`/novel/${novelId}/suggest-edit`} className="suggest-edit-link">
-              {currentUser?.role === "ADMIN" ? "Edit details" : "Suggest an edit"}
-            </Link>
-          )}
         </div>
         <dl className="details-grid">
           <dt>Community score</dt>
@@ -459,6 +470,30 @@ function NovelPage() {
           <p className="synopsis-text entry-muted">No synopsis available.</p>
         )}
       </article>
+
+      {/* ================= Tags ================= */}
+      {globalNovel.tags?.length > 0 && (
+        <section className="novel-card" aria-labelledby="tags-title">
+          <h2 className="section-title" id="tags-title">
+            Tags <span className="section-count">{globalNovel.tags.length}</span>
+          </h2>
+          <ul id="tag-list" className="tag-list tag-list--card">
+            {(tagsOpen ? globalNovel.tags : globalNovel.tags.slice(0, TAGS_PREVIEW)).map((tag) => (
+              <li key={tag} className="tag-chip">{tag}</li>
+            ))}
+          </ul>
+          {globalNovel.tags.length > TAGS_PREVIEW && (
+            <button
+              className="read-more-btn"
+              aria-expanded={tagsOpen}
+              aria-controls="tag-list"
+              onClick={() => setTagsOpen((open) => !open)}
+            >
+              {tagsOpen ? "Show fewer" : `Show all ${globalNovel.tags.length} tags`}
+            </button>
+          )}
+        </section>
+      )}
 
       <NovelReviews key={novelId} novelId={novelId} />
 

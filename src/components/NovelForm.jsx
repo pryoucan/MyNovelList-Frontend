@@ -11,6 +11,7 @@ import {
 import "../design/NovelForm.css";
 
 const MAX_GENRES = 12;
+const MAX_TAGS = 100;
 const SYNOPSIS_MAX = 5000;
 const MAX_YEAR = new Date().getFullYear() + 2;
 
@@ -28,6 +29,7 @@ const toForm = (novel) => ({
   publisherOriginal: novel?.publishers?.original ?? "",
   publisherEnglish: novel?.publishers?.english ?? "",
   genres: novel?.genres ?? [],
+  tags: novel?.tags ?? [],
   synopsis: novel?.synopsis ?? "",
 });
 
@@ -48,6 +50,7 @@ const normalized = (form) => ({
   publisherOriginal: form.publisherOriginal || null,
   publisherEnglish: form.publisherEnglish || null,
   genres: form.genres,
+  tags: form.tags,
   synopsis: str(form.synopsis),
 });
 
@@ -55,7 +58,7 @@ const normalized = (form) => ({
 const toApi = (values, only) => {
   const has = (k) => !only || only.has(k);
   const body = {};
-  for (const k of ["title", "originalTitle", "author", "originalLanguage", "isFullyTranslated", "chapterCount", "synopsis", "genres"]) {
+  for (const k of ["title", "originalTitle", "author", "originalLanguage", "isFullyTranslated", "chapterCount", "synopsis", "genres", "tags"]) {
     if (has(k)) body[k] = values[k];
   }
   const publication = {};
@@ -96,18 +99,76 @@ const validate = (v) => {
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+const titleCase = (s) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
+// Chips with a text input: Enter or comma adds one, Backspace on an empty
+// input removes the last. `suggestions` are offered as one-click additions.
+function ChipsField({ inputId, label, values, max, maxLength, normalize = (s) => s, suggestions = [], placeholder, onChange }) {
+  const [draft, setDraft] = useState("");
+  const add = (raw) => {
+    const value = normalize(raw.trim().replace(/\s+/g, " "));
+    if (!value || value.length > maxLength) return;
+    if (values.length < max && !values.some((v) => v.toLowerCase() === value.toLowerCase())) {
+      onChange([...values, value]);
+    }
+    setDraft("");
+  };
+  const remove = (value) => onChange(values.filter((v) => v !== value));
+  const matches = suggestions
+    .filter((s) => !values.includes(s) && s.toLowerCase().includes(draft.trim().toLowerCase()))
+    .slice(0, 8);
+
+  return (
+    <>
+      <div className="nf-genres">
+        {values.map((v) => (
+          <span key={v} className="nf-genre">
+            {v}
+            <button type="button" onClick={() => remove(v)} aria-label={`Remove ${v}`}>×</button>
+          </span>
+        ))}
+        {values.length < max && (
+          <input
+            id={inputId}
+            className="nf-genre-input"
+            placeholder={values.length ? "Add another…" : placeholder}
+            value={draft}
+            maxLength={maxLength}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === ",") {
+                e.preventDefault();
+                add(draft);
+              } else if (e.key === "Backspace" && !draft && values.length) {
+                remove(values[values.length - 1]);
+              }
+            }}
+          />
+        )}
+      </div>
+      {matches.length > 0 && (
+        <div className="nf-genre-suggest" aria-label={`Existing ${label}`}>
+          {matches.map((s) => (
+            <button key={s} type="button" className="nf-genre-option" onClick={() => add(s)}>+ {s}</button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 // Shared form for suggesting a new novel (mode="new") or an edit (mode="edit").
 // onSubmit receives the API body: the full novel for "new", or
 // { changes, cover? } with only the changed fields for "edit".
-export default function NovelForm({ mode, novel, genreSuggestions = [], submitLabel, onSubmit, onCancel }) {
+// `initialCover` (data URL) pre-selects a new cover, e.g. from an import.
+export default function NovelForm({ mode, novel, initialCover = null, genreSuggestions = [], tagSuggestions = [], submitLabel, onSubmit, onCancel }) {
   const uid = useId();
   const id = (name) => `${uid}-${name}`;
   const initial = useMemo(() => toForm(novel), [novel]);
   const [form, setForm] = useState(initial);
-  const [cover, setCover] = useState(null); // new cover as data URL
+  const [cover, setCover] = useState(initialCover); // new cover as data URL
   const [coverError, setCoverError] = useState("");
   const [dragging, setDragging] = useState(false);
-  const [genreDraft, setGenreDraft] = useState("");
   const [showErrors, setShowErrors] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -139,24 +200,6 @@ export default function NovelForm({ mode, novel, genreSuggestions = [], submitLa
       )}
     </>
   );
-
-  // ── Genres ──
-  const addGenre = (raw) => {
-    const genre = raw
-      .trim()
-      .replace(/\s+/g, " ")
-      .toLowerCase()
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-    if (!genre || genre.length > 30) return;
-    setForm((f) =>
-      f.genres.includes(genre) || f.genres.length >= MAX_GENRES ? f : { ...f, genres: [...f.genres, genre] }
-    );
-    setGenreDraft("");
-  };
-  const removeGenre = (genre) => setForm((f) => ({ ...f, genres: f.genres.filter((g) => g !== genre) }));
-  const genreMatches = genreSuggestions
-    .filter((g) => !form.genres.includes(g) && g.toLowerCase().includes(genreDraft.trim().toLowerCase()))
-    .slice(0, 8);
 
   // ── Cover ──
   const pickCover = async (file) => {
@@ -359,40 +402,36 @@ export default function NovelForm({ mode, novel, genreSuggestions = [], submitLa
               Genres <span className="nf-req">*</span>
               <span className="nf-count">{form.genres.length}/{MAX_GENRES}</span>
             </label>
-            <div className="nf-genres">
-              {form.genres.map((g) => (
-                <span key={g} className="nf-genre">
-                  {g}
-                  <button type="button" onClick={() => removeGenre(g)} aria-label={`Remove ${g}`}>×</button>
-                </span>
-              ))}
-              {form.genres.length < MAX_GENRES && (
-                <input
-                  id={id("genre")}
-                  className="nf-genre-input"
-                  placeholder={form.genres.length ? "Add another…" : "Type a genre and press Enter"}
-                  value={genreDraft}
-                  maxLength={30}
-                  onChange={(e) => setGenreDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === ",") {
-                      e.preventDefault();
-                      addGenre(genreDraft);
-                    } else if (e.key === "Backspace" && !genreDraft && form.genres.length) {
-                      removeGenre(form.genres[form.genres.length - 1]);
-                    }
-                  }}
-                />
-              )}
-            </div>
-            {genreMatches.length > 0 && (
-              <div className="nf-genre-suggest" aria-label="Existing genres">
-                {genreMatches.map((g) => (
-                  <button key={g} type="button" className="nf-genre-option" onClick={() => addGenre(g)}>+ {g}</button>
-                ))}
-              </div>
-            )}
+            <ChipsField
+              inputId={id("genre")}
+              label="genres"
+              values={form.genres}
+              max={MAX_GENRES}
+              maxLength={30}
+              normalize={titleCase}
+              suggestions={genreSuggestions}
+              placeholder="Type a genre and press Enter"
+              onChange={set("genres")}
+            />
             {fieldMeta("genres")}
+          </div>
+
+          <div className={fieldClass("tags")}>
+            <label className="nf-label" htmlFor={id("tag")}>
+              Tags
+              <span className="nf-count">{form.tags.length}/{MAX_TAGS}</span>
+            </label>
+            <ChipsField
+              inputId={id("tag")}
+              label="tags"
+              values={form.tags}
+              max={MAX_TAGS}
+              maxLength={50}
+              suggestions={tagSuggestions}
+              placeholder="e.g. Weak to Strong — press Enter to add"
+              onChange={set("tags")}
+            />
+            {fieldMeta("tags")}
           </div>
 
           <div className={fieldClass("synopsis")}>

@@ -96,6 +96,63 @@
 }
 .review-inline-spoiler--revealed > span { visibility: visible; }
 .review-inline-spoiler--revealed:hover { background: #ded8d3; }
+.review-thread-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  margin-top: 0.65rem;
+}
+.review-action {
+  border: 0;
+  padding: 0.15rem 0;
+  background: none;
+  color: #66605c;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.review-action:hover { color: #221f1e; }
+.review-action:disabled { opacity: 0.55; cursor: default; }
+.review-action--liked, .review-action--liked:hover { color: #b13b4d; }
+.review-action--danger { color: #a13030; }
+.review-action-error { margin-left: 0.4rem; color: #a13030; font-size: 0.75rem; }
+.review-reply-count { color: #888685; font-size: 0.78rem; }
+.review-replies {
+  margin-top: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid #e8e3df;
+}
+.review-reply { padding: 0.75rem 0 0.35rem; border-top: 1px solid #f1eeec; }
+.review-reply:first-child { border-top: 0; }
+.review-reply .review-body { margin-top: 0.4rem; font-size: 0.88rem; }
+.review-reply-children {
+  margin: 0.7rem 0 0 1rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid #eee9e6;
+}
+.review-reply-children--flat { margin-left: 0; }
+.review-deleted-name, .review-deleted-body { color: #888685; font-size: 0.83rem; font-style: italic; }
+.review-deleted-body { margin: 0.4rem 0; }
+.review-reply-form { display: grid; gap: 0.55rem; margin: 0.8rem 0; }
+.review-reply-form label { display: grid; gap: 0.4rem; color: #514b48; font-size: 0.82rem; font-weight: 600; }
+.review-reply-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #cfc8c3;
+  border-radius: 9px;
+  padding: 0.65rem;
+  color: #221f1e;
+  background: #fff;
+  font: inherit;
+  font-size: 0.87rem;
+  line-height: 1.5;
+}
+.review-reply-form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
+.review-reply-form-actions > span { margin-right: auto; color: #888685; font-size: 0.75rem; }
+.review-reply-form-actions .review-primary { padding: 0.45rem 0.75rem; }
 .review-editor { display: grid; gap: 0.6rem; margin-bottom: 1.25rem; }
 .review-editor > label { font-size: 0.9rem; font-weight: 600; color: #221f1e; }
 .review-editor textarea {
@@ -153,11 +210,14 @@
 .review-actions { justify-content: flex-start; }
 .review-error { color: #9f2525; font-size: 0.85rem; }
 .review-signin a { color: #221f1e; font-weight: 600; }
-.review-primary:focus-visible, .review-text-button:focus-visible, .review-delete-button:focus-visible, .review-help-icon:focus-visible, .review-inline-spoiler:focus-visible, .review-editor textarea:focus-visible {
+.review-primary:focus-visible, .review-text-button:focus-visible, .review-delete-button:focus-visible, .review-help-icon:focus-visible, .review-inline-spoiler:focus-visible, .review-editor textarea:focus-visible, .review-action:focus-visible, .review-reply-form textarea:focus-visible {
   outline: 2px solid #221f1e;
   outline-offset: 2px;
 }
 @media (max-width: 480px) {
   .review-section-head { align-items: flex-start; }
   .review-card-head { align-items: flex-start; }
+  .review-replies { padding-left: 0.6rem; }
+  .review-reply-children { margin-left: 0.45rem; padding-left: 0.55rem; }
+  .review-reply-children--flat { margin-left: 0; }
 }

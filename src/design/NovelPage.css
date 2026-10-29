@@ -32,6 +32,43 @@
   outline-offset: 3px;
 }
 
+/* Edit / cover actions, right-aligned just above the Details card. */
+.novel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.page-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 2.1rem;
+  padding: 0 14px;
+  border: 1px solid #dcdadb;
+  border-radius: 10px;
+  background: #fff;
+  color: #221f1e;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.page-action:hover {
+  background: #faf9f9;
+  border-color: #c8c5c3;
+}
+
+.page-action:focus-visible {
+  outline: 2px solid #221f1e;
+  outline-offset: 2px;
+}
+
 /* ===============================
    HEADER
 ================================ */
@@ -334,17 +371,6 @@
   gap: 1rem;
 }
 
-.suggest-edit-link {
-  font-size: 0.82rem;
-  font-weight: 550;
-  color: #5c5957;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.suggest-edit-link:hover {
-  color: #221f1e;
-}
 
 .details-grid {
   display: grid;
@@ -511,9 +537,19 @@
     width: 100%;
   }
 
+  /* Only the header (cover, title, genres) is centred; cards stay left-aligned. */
   .novel-byline,
-  .tag-list {
+  .novel-header .tag-list {
     justify-content: center;
+  }
+
+  .tag-list--card {
+    gap: 5px;
+  }
+
+  .tag-list--card .tag-chip {
+    padding: 2px 9px;
+    font-size: 0.74rem;
   }
 
   .entry-card {
@@ -554,4 +590,22 @@
     align-items: stretch;
     text-align: center;
   }
+}
+
+/* ===============================
+   TAGS CARD
+================================ */
+
+.section-count {
+  margin-left: 4px;
+  font-weight: 500;
+  color: #b0aeac;
+}
+
+.tag-list--card {
+  margin-bottom: 0;
+}
+
+.tag-list--card + .read-more-btn {
+  margin-top: 0.75rem;
 }

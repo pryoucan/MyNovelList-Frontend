@@ -1,36 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCurrentUser } from "../hooks/useCurrentUser";
-import { getNovelReviews, createNovelReview, editNovelReview, deleteNovelReview } from "../services/reviewService";
-import { splitSpoilers } from "../utils/reviewSpoilers";
+import { getNovelReviews, createNovelReview, editNovelReview, deleteNovelReview, setReviewLike, setReplyLike, createReviewReply, editReviewReply, deleteReviewReply } from "../services/reviewService";
+import { ReviewBody, LikeButton, ReplyComposer, ThreadReply } from "./ReviewThread";
+import { mapThreadItem, appendThreadReply } from "../utils/reviewThreadState";
 import "../design/NovelReviews.css";
 
 const dateLabel = (value) => new Date(value).toLocaleDateString(undefined, {
   year: "numeric", month: "short", day: "numeric",
 });
 
-function SpoilerText({ text }) {
-  const [revealed, setRevealed] = useState(false);
-  return (
-    <button
-      type="button"
-      className={`review-inline-spoiler${revealed ? " review-inline-spoiler--revealed" : ""}`}
-      aria-label={revealed ? `Hide spoiler: ${text}` : "Reveal spoiler"}
-      aria-pressed={revealed}
-      onClick={() => setRevealed((value) => !value)}
-    >
-      <span aria-hidden={!revealed}>{text}</span>
-    </button>
-  );
-}
+const countReplies = (replies = []) => replies.reduce((total, reply) => total + 1 + countReplies(reply.children), 0);
 
-function ReviewCard({ review, own, onEdit, onDelete }) {
+function ReviewCard({ review, own, currentUser, onEdit, onDelete, onReply, onEditReply, onDeleteReply, onLike }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-  const parts = review.isSpoiler
-    ? [{ text: review.body, spoiler: true }]
-    : splitSpoilers(review.body);
+  const [replying, setReplying] = useState(false);
+  const repliesCount = countReplies(review.replies);
 
   return (
     <article className="review-card">
@@ -51,7 +38,7 @@ function ReviewCard({ review, own, onEdit, onDelete }) {
       </div>
       {confirmingDelete && (
         <div className="review-delete-confirm">
-          <span>Delete your review? This can’t be undone.</span>
+          <span>Delete your review and its {repliesCount} {repliesCount === 1 ? "reply" : "replies"}? This can’t be undone.</span>
           <div className="review-card-actions">
             <button type="button" className="review-delete-button" disabled={deleting} onClick={async () => {
               setDeleting(true);
@@ -68,11 +55,17 @@ function ReviewCard({ review, own, onEdit, onDelete }) {
           {deleteError && <p className="review-error" role="alert">{deleteError}</p>}
         </div>
       )}
-      <p className="review-body">
-        {parts.map((part, index) => part.spoiler
-          ? <SpoilerText key={index} text={part.text} />
-          : <span key={index}>{part.text}</span>)}
-      </p>
+      <ReviewBody body={review.body} wholeSpoiler={review.isSpoiler} />
+      <div className="review-thread-actions">
+        <LikeButton item={review} canLike={!!currentUser && !review.pending} onToggle={(liked) => onLike(review.id, null, review, liked)} />
+        {currentUser && !review.pending && <button type="button" className="review-action" onClick={() => setReplying((value) => !value)}>Reply</button>}
+        {repliesCount > 0 && <span className="review-reply-count">{repliesCount} {repliesCount === 1 ? "reply" : "replies"}</span>}
+      </div>
+      {replying && <ReplyComposer label={`Reply to ${review.username}`} onSubmit={async (body) => { await onReply(review.id, null, body); setReplying(false); }} onCancel={() => setReplying(false)} />}
+      {(review.replies?.length ?? 0) > 0 && <div className="review-replies">
+        {review.replies.map((reply) => <ThreadReply key={reply.id} reply={reply} reviewId={review.id} currentUser={currentUser}
+          onReply={onReply} onEdit={onEditReply} onDelete={onDeleteReply} onLike={onLike} />)}
+      </div>}
     </article>
   );
 }
@@ -110,6 +103,36 @@ export default function NovelReviews({ novelId }) {
     setEditing(false);
   };
 
+  const addReply = async (reviewId, parentId, body) => {
+    const reply = await createReviewReply(novelId, reviewId, body, parentId);
+    setReviews((items) => appendThreadReply(items, reviewId, parentId, reply));
+  };
+
+  const updateReply = async (reviewId, replyId, body) => {
+    const reply = await editReviewReply(novelId, reviewId, replyId, body);
+    setReviews((items) => mapThreadItem(items, reviewId, replyId, (item) => ({ ...item, ...reply, children: item.children })));
+  };
+
+  const removeReply = async (reviewId, replyId) => {
+    const reply = await deleteReviewReply(novelId, reviewId, replyId);
+    setReviews((items) => mapThreadItem(items, reviewId, replyId, (item) => ({ ...item, ...reply, children: item.children })));
+  };
+
+  const toggleLike = async (reviewId, replyId, item, liked) => {
+    const before = { likesCount: item.likesCount ?? 0, likedByMe: !!item.likedByMe };
+    const apply = (patch) => setReviews((items) => mapThreadItem(items, reviewId, replyId, (current) => ({ ...current, ...patch })));
+    apply({ likesCount: Math.max(0, before.likesCount + (liked ? 1 : -1)), likedByMe: liked });
+    try {
+      const result = replyId
+        ? await setReplyLike(novelId, reviewId, replyId, liked)
+        : await setReviewLike(novelId, reviewId, liked);
+      apply(result);
+    } catch (error) {
+      apply(before);
+      throw error;
+    }
+  };
+
   const save = async (event) => {
     event.preventDefault();
     if (!currentUser) {
@@ -132,6 +155,9 @@ export default function NovelReviews({ novelId }) {
       isSpoiler: false,
       createdAt: mine?.createdAt ?? new Date().toISOString(),
       editedAt: mine && mine.body !== trimmed ? new Date().toISOString() : mine?.editedAt ?? null,
+      likesCount: mine?.likesCount ?? 0,
+      likedByMe: mine?.likedByMe ?? false,
+      replies: mine?.replies ?? [],
       pending: true,
     };
     setReviews((items) => mine
@@ -144,7 +170,7 @@ export default function NovelReviews({ novelId }) {
       const review = mine
         ? await editNovelReview(novelId, { body: trimmed, isSpoiler: false })
         : await createNovelReview(novelId, { body: trimmed, isSpoiler: false });
-      setReviews((items) => items.map((item) => item.id === temporaryId ? review : item));
+      setReviews((items) => items.map((item) => item.id === temporaryId ? { ...review, replies: item.replies ?? [] } : item));
     } catch (error) {
       setReviews(previous);
       setBody(trimmed);
@@ -188,14 +214,16 @@ export default function NovelReviews({ novelId }) {
         </form>
       )}
 
-      {!currentUser && !editing && <p className="review-signin"><Link to="/login">Sign in</Link> to write a review.</p>}
+      {!currentUser && !editing && <p className="review-signin"><Link to="/login">Sign in</Link> to write a review, like, or reply.</p>}
       {loading && <p className="review-empty">Loading reviews…</p>}
       {loadError && <p className="review-error" role="alert">{loadError}</p>}
       {!loading && !loadError && reviews.length === 0 && <p className="review-empty">No reviews yet. Be the first to share your thoughts.</p>}
       {!loading && !loadError && reviews.length > 0 && (
         <div className="review-list">
           {reviews.map((review) => (
-            <ReviewCard key={review.id} review={review} own={review.userId === currentUser?.id} onEdit={openEditor} onDelete={removeMine} />
+            <ReviewCard key={review.id} review={review} own={review.userId === currentUser?.id} currentUser={currentUser}
+              onEdit={openEditor} onDelete={removeMine} onReply={addReply} onEditReply={updateReply}
+              onDeleteReply={removeReply} onLike={toggleLike} />
           ))}
         </div>
       )}

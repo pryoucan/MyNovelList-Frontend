@@ -15,6 +15,13 @@ const ProfileIcon = () => (
   </svg>
 );
 
+const PlusIcon = () => (
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 5v14" />
+    <path d="M5 12h14" />
+  </svg>
+);
+
 const InboxIcon = () => (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M22 12h-6l-2 3h-4l-2-3H2" />
@@ -163,6 +170,16 @@ export default function UserMenu() {
             }}
           >
             <ProfileIcon /> Profile
+          </button>
+          <button
+            className="menu-item"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              navigate("/suggest");
+            }}
+          >
+            <PlusIcon /> Suggest a novel
           </button>
           <button
             className="menu-item"

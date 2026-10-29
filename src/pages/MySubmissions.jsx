@@ -10,6 +10,7 @@ import { formatDate } from "../utils/novelFields";
 import "../design/Homepage.css";
 import "../design/status.css";
 import "../design/Requests.css";
+import BackArrow from "../components/BackArrow";
 
 // Everything the user has suggested, newest first, with the review outcome.
 export default function MySubmissions() {
@@ -45,7 +46,7 @@ export default function MySubmissions() {
   return (
     <div className="page-container">
       <Header />
-      <Link to="/profile" className="req-back"><span aria-hidden="true">←</span> Back to profile</Link>
+      <Link to="/profile" className="req-back"><BackArrow /> Back to profile</Link>
 
       <div className="req-page-head">
         <div>

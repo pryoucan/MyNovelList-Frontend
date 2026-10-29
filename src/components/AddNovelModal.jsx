@@ -4,6 +4,7 @@ import { ConfirmModal } from "./ConfirmModal";
 import NovelThumb from "./NovelThumb";
 import StarRating from "./StarRating";
 import StatusIcon from "./StatusIcon";
+import { useScrollLock } from "../hooks/useScrollLock";
 import "../design/status.css";
 
 const STATUSES = ["Reading", "Completed", "On Hold", "Plan To Read", "Dropped"];
@@ -66,6 +67,8 @@ function AddNovelModal({
       if (!completedAt) setCompletedAt(today());
     }
   };
+
+  useScrollLock(open && !!novel);
 
   // Close on Escape.
   useEffect(() => {

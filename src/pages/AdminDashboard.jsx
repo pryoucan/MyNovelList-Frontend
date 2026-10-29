@@ -52,6 +52,11 @@ function NewNovelDetails({ novel }) {
       <ul className="req-tags" aria-label="Genres">
         {novel.genres.map((g) => <li key={g}>{g}</li>)}
       </ul>
+      {novel.tags?.length > 0 && (
+        <ul className="req-tags req-tags--minor" aria-label="Tags">
+          {novel.tags.map((t) => <li key={t}>{t}</li>)}
+        </ul>
+      )}
       {novel.synopsis && <p className="req-synopsis">{novel.synopsis}</p>}
     </>
   );
@@ -187,10 +192,53 @@ function RequestCard({ request, onApprove, onReject }) {
   );
 }
 
+// Page numbers to show: first, last, and the current page ±1, with gaps as "…".
+const pageItems = (page, totalPages) => {
+  const pages = [...new Set([1, page - 1, page, page + 1, totalPages])]
+    .filter((p) => p >= 1 && p <= totalPages)
+    .sort((a, b) => a - b);
+  return pages.flatMap((p, i) => (i > 0 && p - pages[i - 1] > 1 ? ["…", p] : [p]));
+};
+
+function Pagination({ page, totalPages, total, pageSize, onChange }) {
+  if (totalPages <= 1) return null;
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+  return (
+    <nav className="req-pagination" aria-label="Pages">
+      <span className="req-pagination-range">
+        {from}–{to} of {total}
+      </span>
+      <div className="req-pagination-pages">
+        <button type="button" className="req-page-btn" onClick={() => onChange(page - 1)} disabled={page === 1}
+          aria-label="Previous page">
+          ‹ Prev
+        </button>
+        {pageItems(page, totalPages).map((p, i) =>
+          p === "…" ? (
+            <span key={`gap-${i}`} className="req-page-gap" aria-hidden="true">…</span>
+          ) : (
+            <button key={p} type="button" className={`req-page-btn${p === page ? " is-current" : ""}`}
+              onClick={() => onChange(p)} aria-current={p === page ? "page" : undefined} aria-label={`Page ${p}`}>
+              {p}
+            </button>
+          )
+        )}
+        <button type="button" className="req-page-btn" onClick={() => onChange(page + 1)} disabled={page === totalPages}
+          aria-label="Next page">
+          Next ›
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 export default function AdminDashboard() {
   const user = useCurrentUser();
   const [status, setStatus] = useState("PENDING");
   const [type, setType] = useState("");
+  const [page, setPage] = useState(1);
+  const [reload, setReload] = useState(0);
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -198,9 +246,14 @@ export default function AdminDashboard() {
   // Reload when the tab or filter changes; ignore responses for a tab we've left.
   useEffect(() => {
     let current = true;
-    getAdminRequests({ status, type: type || undefined })
+    getAdminRequests({ status, type: type || undefined, page })
       .then((result) => {
         if (!current) return;
+        // The last item on the last page was just reviewed: step back a page.
+        if (result.requests.length === 0 && page > result.totalPages) {
+          setPage(result.totalPages);
+          return;
+        }
         setData(result);
         setError("");
       })
@@ -210,15 +263,19 @@ export default function AdminDashboard() {
     return () => {
       current = false;
     };
-  }, [status, type]);
+  }, [status, type, page, reload]);
 
+  const goToPage = (next) => {
+    setPage(next);
+    setNotice("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Hide the card straight away, then reload the page so the next request moves up.
   const removeCard = (request, message) => {
-    setData((d) => ({
-      ...d,
-      requests: d.requests.filter((r) => r.id !== request.id),
-      pending: { ...d.pending, [request.type]: Math.max(0, d.pending[request.type] - 1) },
-    }));
+    setData((d) => ({ ...d, requests: d.requests.filter((r) => r.id !== request.id) }));
     setNotice(message);
+    setReload((n) => n + 1);
   };
 
   const onApprove = async (request) => {
@@ -251,7 +308,10 @@ export default function AdminDashboard() {
           <h1 className="req-title">Review requests</h1>
           <p className="req-intro">Suggestions from readers. Approved changes go live immediately.</p>
         </div>
-        <Link to="/suggest" className="req-btn req-btn--ghost">+ Add a novel</Link>
+        <div className="req-head-actions">
+          <Link to="/admin/import" className="req-btn req-btn--ghost">Import from NovelUpdates</Link>
+          <Link to="/suggest" className="req-btn req-btn--ghost">+ Add a novel</Link>
+        </div>
       </div>
 
       <nav className="view-tabs" aria-label="Request status">
@@ -262,6 +322,7 @@ export default function AdminDashboard() {
             aria-current={status === t.value ? "page" : undefined}
             onClick={() => {
               setStatus(t.value);
+              setPage(1);
               setNotice("");
             }}
           >
@@ -274,7 +335,10 @@ export default function AdminDashboard() {
       <div className="filter-bar req-type-filter" role="group" aria-label="Request type">
         {TYPE_FILTERS.map((f) => (
           <button key={f.value} className={`filter-btn ${type === f.value ? "active" : ""}`} aria-pressed={type === f.value}
-            onClick={() => setType(f.value)}>
+            onClick={() => {
+              setType(f.value);
+              setPage(1);
+            }}>
             {f.label}
             {status === "PENDING" && data && f.value && <span className="req-filter-count">{data.pending[f.value]}</span>}
           </button>
@@ -296,6 +360,11 @@ export default function AdminDashboard() {
             <RequestCard key={`${r.type}-${r.id}`} request={r} onApprove={onApprove} onReject={onReject} />
           ))}
         </ul>
+      )}
+
+      {data && data.requests.length > 0 && (
+        <Pagination page={data.page} totalPages={data.totalPages} total={data.total} pageSize={data.pageSize}
+          onChange={goToPage} />
       )}
     </div>
   );

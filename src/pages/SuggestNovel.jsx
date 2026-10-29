@@ -1,35 +1,34 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { Header } from "../components/Header";
 import NovelForm from "../components/NovelForm";
 import { getAllNovels } from "../services/novelService";
-import { submitNovelRequest, submitEditRequest } from "../services/requestService";
+import { submitEditRequest } from "../services/requestService";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import { useAddNovel } from "../components/ReplaceNovelPrompt";
+import { popularValues } from "../utils/novelFields";
 import "../design/Homepage.css";
 import "../design/status.css";
 import "../design/Requests.css";
+import BackArrow from "../components/BackArrow";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
-
-// Every genre already used in the catalogue, most common first.
-const genreList = (novels) => {
-  const counts = new Map();
-  for (const n of novels) for (const g of n.genres ?? []) counts.set(g, (counts.get(g) ?? 0) + 1);
-  return [...counts].sort((a, b) => b[1] - a[1]).map(([g]) => g);
-};
 
 // /suggest (new novel) and /novel/:novelId/suggest-edit (edit). Admins'
 // submissions are applied immediately by the backend.
 export default function SuggestNovel({ mode }) {
   const { novelId } = useParams();
+  const [searchParams] = useSearchParams();
+  // From a "Suggest it" link after a search that found nothing.
+  const [prefill] = useState(() => (mode === "new" && searchParams.get("title") ? { title: searchParams.get("title").slice(0, 200) } : null));
   const navigate = useNavigate();
   const user = useCurrentUser();
   const isAdmin = user?.role === "ADMIN";
   const loggedIn = !!localStorage.getItem("displayUsername");
 
   const [novel, setNovel] = useState(null);
-  const [genres, setGenres] = useState([]);
+  const [suggestions, setSuggestions] = useState({ genres: [], tags: [] });
   const [loading, setLoading] = useState(mode === "edit");
   const [loadError, setLoadError] = useState("");
   const [sent, setSent] = useState(null); // response after submitting
@@ -39,7 +38,7 @@ export default function SuggestNovel({ mode }) {
   }, [loggedIn, navigate]);
 
   useEffect(() => {
-    getAllNovels().then((all) => setGenres(genreList(all)));
+    getAllNovels().then((all) => setSuggestions({ genres: popularValues(all, "genres"), tags: popularValues(all, "tags") }));
     if (mode !== "edit") return;
     axios
       .get(`${API_URL}/api/novels/${novelId}`)
@@ -48,8 +47,7 @@ export default function SuggestNovel({ mode }) {
       .finally(() => setLoading(false));
   }, [mode, novelId]);
 
-  const handleSubmit = async (body) => {
-    const res = mode === "edit" ? await submitEditRequest(novelId, body) : await submitNovelRequest(body);
+  const onDone = (res) => {
     if (res.applied) {
       navigate(`/novel/${res.novelId}`);
       return;
@@ -57,6 +55,10 @@ export default function SuggestNovel({ mode }) {
     setSent(res);
     window.scrollTo({ top: 0 });
   };
+  // New novels: admins are asked whether to replace a duplicate.
+  const { submit: addNovel, prompt } = useAddNovel(onDone);
+  const handleSubmit = async (body) =>
+    mode === "edit" ? onDone(await submitEditRequest(novelId, body)) : addNovel(body);
 
   const title =
     mode === "edit" ? (isAdmin ? "Edit novel" : "Suggest an edit") : isAdmin ? "Add a novel" : "Suggest a novel";
@@ -73,7 +75,7 @@ export default function SuggestNovel({ mode }) {
     <div className="page-container">
       <Header />
       <Link to={mode === "edit" ? `/novel/${novelId}` : "/"} className="req-back">
-        <span aria-hidden="true">←</span> {mode === "edit" ? "Back to novel" : "Back to list"}
+        <BackArrow /> {mode === "edit" ? "Back to novel" : "Back to list"}
       </Link>
 
       {sent ? (
@@ -105,8 +107,9 @@ export default function SuggestNovel({ mode }) {
           ) : (
             <NovelForm
               mode={mode}
-              novel={novel}
-              genreSuggestions={genres}
+              novel={novel ?? prefill}
+              genreSuggestions={suggestions.genres}
+              tagSuggestions={suggestions.tags}
               submitLabel={mode === "edit" ? (isAdmin ? "Save changes" : "Send edit for review") : isAdmin ? "Add novel" : "Send for review"}
               onSubmit={handleSubmit}
               onCancel={() => navigate(mode === "edit" ? `/novel/${novelId}` : "/")}
@@ -114,6 +117,7 @@ export default function SuggestNovel({ mode }) {
           )}
         </div>
       )}
+      {prompt}
     </div>
   );
 }
