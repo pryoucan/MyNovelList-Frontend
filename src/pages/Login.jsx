@@ -31,7 +31,8 @@ export default function Login() {
     try {
       const response = await axios.post(
         `${API_URL}/api/auth/login`,
-        { email, password }
+        { email, password },
+        { withCredentials: true }
       );
       localStorage.setItem("displayUsername", response.data.username);
       navigate("/");

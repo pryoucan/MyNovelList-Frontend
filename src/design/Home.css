@@ -5,8 +5,7 @@
 ================================ */
 
 .home-hero {
-  position: relative;
-  margin-bottom: 3.5rem; /* room for the search box hanging off the banner */
+  margin-bottom: 3.5rem;
 }
 
 .home-hero-banner {
@@ -82,10 +81,8 @@
 
 /* Search overlapping the banner's bottom edge */
 .home-search {
-  position: absolute;
-  left: 50%;
-  bottom: -1.75rem;
-  transform: translateX(-50%);
+  position: relative;
+  margin: -1.75rem auto 0;
   display: flex;
   align-items: center;
   gap: 10px;
