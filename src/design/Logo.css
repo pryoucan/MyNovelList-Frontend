@@ -1,0 +1,47 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #221f1e;
+  text-decoration: none;
+  border-radius: 10px;
+}
+
+.brand:focus-visible {
+  outline: 2px solid #221f1e;
+  outline-offset: 3px;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 11px;
+  background: #221f1e;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 600px) {
+  .brand-mark {
+    width: 2.4rem;
+    height: 2.4rem;
+    font-size: 0.82rem;
+  }
+
+  .brand-name {
+    font-size: 1.1rem;
+  }
+}

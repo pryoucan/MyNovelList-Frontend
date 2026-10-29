@@ -1,10 +1,47 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AddNovelModal } from "../components/AddNovelModal";
-import { useNovelEntry } from "../hooks/useNovelEntry";
+import NovelThumb from "../components/NovelThumb";
+import Logo from "../components/Logo";
+import UserMenu from "../components/UserMenu";
+import StatusIcon from "../components/StatusIcon";
+import HomeHero from "../components/home/HomeHero";
+import ContinueReading from "../components/home/ContinueReading";
+import PopularNovels from "../components/home/PopularNovels";
+import GenreChips from "../components/home/GenreChips";
+import { getNovelStats } from "../services/novelService";
+import { useNovelEntry, buildEntryPayload } from "../hooks/useNovelEntry";
 import { useNovelManager } from "../hooks/useNovelManager";
-import axios from "axios";
 import "../design/Homepage.css";
+import "../design/status.css";
+import "../design/Home.css";
+
+// Publication status of the novel itself ("Completed" is shown as "Finished"
+// so it isn't confused with the reader's own "Completed").
+const PUBLICATION_FILTERS = [
+  { value: "", label: "All" },
+  { value: "Ongoing", label: "Ongoing" },
+  { value: "Upcoming", label: "Upcoming" },
+  { value: "Completed", label: "Finished" },
+];
+
+// The reader's own status for novels on their list.
+const LIST_FILTERS = [
+  { value: "", label: "All" },
+  { value: "Reading", label: "Reading" },
+  { value: "Completed", label: "Completed" },
+  { value: "On Hold", label: "On Hold" },
+  { value: "Plan To Read", label: "Plan To Read" },
+  { value: "Dropped", label: "Dropped" },
+];
+
+const statusSlug = (status) => status.toLowerCase().split(" ").join("-");
+
+const matchesSearch = (novel, query) => {
+  if (!query) return true;
+  const q = query.toLowerCase();
+  return [novel.title, novel.originalTitle, novel.author].some((field) => field?.toLowerCase().includes(q));
+};
 
 function Homepage() {
   const navigate = useNavigate();
@@ -20,47 +57,35 @@ function Homepage() {
 
   const entryForm = useNovelEntry();
 
-  const [filter, setFilter] = useState("");
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [avatar, setAvatar] = useState(null);
+  // Each view keeps its own filter, so switching views never shows a stale one.
+  const [filters, setFilters] = useState({ all: "", list: "" });
+  const viewKey = showReadingListOnly ? "list" : "all";
+  const filter = filters[viewKey];
+  const setFilter = (value) => setFilters((prev) => ({ ...prev, [viewKey]: value }));
+  const [search, setSearch] = useState("");
+  const [genre, setGenre] = useState("");
+  const [stats, setStats] = useState([]);
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    getNovelStats().then(setStats);
+  }, []);
+
+  const scrollToList = () => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    listRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  };
+
+  const pickGenre = (next) => {
+    setGenre(next);
+    if (next) scrollToList();
+  };
+
+  // +1 chapter from "Continue reading"; the backend caps it at the chapter count.
+  const advanceProgress = (novelId, progress) => saveEntry(novelId, { progress });
   const [showModal, setShowModal] = useState(false);
   const [selectedNovel, setSelectedNovel] = useState(null);
 
-  const menuRef = useRef(null);
-
-  // Fetch custom avatar on mount
-  useEffect(() => {
-    if (!isLoggedIn) return;
-
-    const API_URL = import.meta.env.VITE_API_BASE_URL;
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/auth/me`, { withCredentials: true });
-        if (res.data?.user?.avatar) {
-          setAvatar(res.data.user.avatar);
-        }
-      } catch (err) {
-        console.error("Failed to fetch user in Homepage:", err);
-      }
-    };
-    fetchUser();
-  }, [isLoggedIn]);
-
-  // Close user dropdown menu when clicking outside
-  useEffect(() => {
-    if (!showUserMenu) return;
-
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowUserMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showUserMenu]);
 
   // BUG 15 FIX: Redirect to login when token is expired/invalid
   useEffect(() => {
@@ -71,72 +96,48 @@ function Homepage() {
     }
   }, [authError, navigate]);
 
-  useEffect(() => {
-    if (showModal && selectedNovel) {
-      const existingEntry = userEntries[selectedNovel._id];
-      if (existingEntry) {
-        entryForm.fill(existingEntry);
-      } else {
-        entryForm.reset();
-      }
-    }
-  }, [showModal, selectedNovel, userEntries]);
-
-  // Reset filter when switching between Global list and Reading List views
-  useEffect(() => {
-    setFilter("");
-  }, [showReadingListOnly]);
-
+  // Fill the form in the same event as opening, so the modal's first render
+  // already has the entry's values (no second render, no stale status).
   const openModal = (novel) => {
     if (!isLoggedIn) return alert("Login required");
+    const existingEntry = userEntries[novel.id];
+    if (existingEntry) {
+      entryForm.fill(existingEntry);
+    } else {
+      entryForm.reset(novel.publication?.status === "Upcoming" ? "Plan To Read" : "Reading");
+    }
     setSelectedNovel(novel);
     setShowModal(true);
   };
 
   // BUG 2 FIX: Moved currentEntry declaration before functions that use it
-  const currentEntry = selectedNovel ? userEntries[selectedNovel._id] : null;
+  const currentEntry = selectedNovel ? userEntries[selectedNovel.id] : null;
 
+  // Errors propagate to the modal, which shows them inline.
   const handleSubmit = async () => {
     if (!selectedNovel) return;
-
-    try {
-      // BUG 12 FIX: Consistent payload — send progress as-is (0 is valid),
-      // only omit null/undefined for optional fields using ?? undefined
-      await saveEntry(selectedNovel._id, {
-        status: entryForm.status,
-        progress: entryForm.progress === "" ? 0 : (entryForm.progress ?? 0),
-        rating: entryForm.rating ?? undefined,
-        startedAt: entryForm.startedAt ?? undefined,
-        completedAt: entryForm.completedAt ?? undefined,
-      });
-      setShowModal(false);
-    } catch (err) {
-      console.error("saveEntry failed:", err);
-      alert("Failed to save novel");
-    }
+    await saveEntry(selectedNovel.id, buildEntryPayload(entryForm));
+    setShowModal(false);
   };
 
   const handleDelete = async () => {
     if (!currentEntry || !selectedNovel) return;
-
-    try {
-      await deleteEntry(currentEntry._id, selectedNovel._id);
-      setShowModal(false);
-    } catch {
-      alert("Failed to delete novel");
-    }
+    await deleteEntry(currentEntry.id, selectedNovel.id);
+    setShowModal(false);
   };
 
   // Filter novels dynamically based on view and active status filters
   const filtered = novels.filter((n) => {
+    if (!matchesSearch(n, search.trim())) return false;
     if (showReadingListOnly) {
-      const entry = userEntries[n._id];
+      const entry = userEntries[n.id];
       if (!entry) return false;
       if (filter) {
         return entry.status.toLowerCase() === filter.toLowerCase();
       }
       return true;
     } else {
+      if (genre && !n.genres?.includes(genre)) return false;
       if (filter) {
         return n.publication?.status?.toLowerCase() === filter.toLowerCase();
       }
@@ -144,9 +145,18 @@ function Homepage() {
     }
   });
 
-  const filterOptions = showReadingListOnly
-    ? ["", "Reading", "Completed", "Plan To Read"]
-    : ["", "Ongoing", "Upcoming", "Completed"];
+  const filterOptions = showReadingListOnly ? LIST_FILTERS : PUBLICATION_FILTERS;
+  const listCount = Object.keys(userEntries).length;
+
+  const emptyMessage = genre && !showReadingListOnly
+    ? `No ${genre} novels match these filters.`
+    : search.trim()
+    ? `No novels match “${search.trim()}”`
+    : showReadingListOnly
+      ? filter
+        ? `Nothing marked “${filter}” yet.`
+        : "Your reading list is empty."
+      : "No novel found";
 
   const SKELETON_ROWS = [
     { title: "70%", author: "38%" },
@@ -161,7 +171,7 @@ function Homepage() {
     return (
       <div className="page-container">
         <div className="page-header">
-          <h2 className="page-title">MyNovelList</h2>
+          <h2 className="page-title"><Logo static /></h2>
           <div className={`skeleton ${isLoggedIn ? "skeleton-user-chip" : "skeleton-login-btn"}`} />
         </div>
 
@@ -169,14 +179,14 @@ function Homepage() {
 
         <div className="skeleton-table-container">
           <div className="skeleton-thead">
-            <div className="skeleton skeleton-th" style={{ width: 36 }} />
+            <div className="skeleton-th-spacer" />
             <div className="skeleton skeleton-th" style={{ flex: 1 }} />
             <div className="skeleton skeleton-th" style={{ width: 64 }} />
             <div className="skeleton skeleton-th" style={{ width: 80 }} />
           </div>
           {SKELETON_ROWS.map((row, i) => (
             <div className="skeleton-row" key={i}>
-              <div className="skeleton skeleton-cell-index" />
+              <div className="skeleton skeleton-cell-cover" />
               <div className="skeleton-cell-title">
                 <div className="skeleton skeleton-cell-title-line" style={{ width: row.title }} />
                 <div className="skeleton skeleton-cell-title-sub" style={{ width: row.author }} />
@@ -194,75 +204,13 @@ function Homepage() {
     <div className="page-container">
       <div className="page-header">
         <div className="title-container">
-          <h2 className="page-title" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
-            MyNovelList
+          <h2 className="page-title">
+            <Logo />
           </h2>
-          {showReadingListOnly && (
-            <span 
-              className="view-badge" 
-              onClick={() => navigate("/")}
-            >
-              Reading List ✕
-            </span>
-          )}
         </div>
 
         {isLoggedIn ? (
-          <div className="user-menu" ref={menuRef}>
-            <button
-              className="user-trigger"
-              onClick={() => setShowUserMenu((v) => !v)}
-            >
-              <span className="user-avatar">
-                {avatar ? (
-                  <img src={avatar} alt={displayUsername} className="user-avatar-img" />
-                ) : (
-                  displayUsername ? displayUsername[0].toUpperCase() : "U"
-                )}
-              </span>
-              <span className="user-name">{displayUsername}</span>
-              <span className="user-chevron">▾</span>
-            </button>
-
-            {showUserMenu && (
-              <div className="user-dropdown">
-                {/* BUG 9 FIX: Added onClick to navigate to profile */}
-                <button
-                  className="dropdown-item"
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    navigate("/profile");
-                  }}
-                >
-                  My Profile
-                </button>
-                <button
-                  className="dropdown-item"
-                  onClick={() => {
-                    setShowUserMenu(false);
-                    navigate("/?view=readinglist");
-                  }}
-                >
-                  My Reading List
-                </button>
-                <button
-                  className="dropdown-item-danger"
-                  onClick={async () => {
-                    try {
-                      await axios.post("/api/auth/logout");
-                    } catch (err) {
-                      console.error("Logout failed:", err);
-                    }
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("displayUsername");
-                    window.location.href = "/";
-                  }}
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
+          <UserMenu />
         ) : (
           <button className="btn" onClick={() => navigate("/login")}>
             Log In
@@ -270,23 +218,98 @@ function Homepage() {
         )}
       </div>
 
-      <div className="filter-bar">
-        {filterOptions.map((f) => (
+      {!showReadingListOnly && (
+        <>
+          <HomeHero
+            isLoggedIn={isLoggedIn}
+            search={search}
+            onSearch={setSearch}
+            onSubmit={scrollToList}
+            novels={novels}
+            userEntries={userEntries}
+            stats={stats}
+          />
+          {isLoggedIn && (
+            <ContinueReading novels={novels} userEntries={userEntries} onAdvance={advanceProgress} />
+          )}
+          <PopularNovels novels={novels} stats={stats} />
+          <GenreChips novels={novels} active={genre} onSelect={pickGenre} />
+        </>
+      )}
+
+      <section className="list-section" ref={listRef} aria-label="Novel list">
+      {isLoggedIn && (
+        <Link to="/suggest" className="suggest-link">
+          <span aria-hidden="true">+</span> Suggest a novel
+        </Link>
+      )}
+      {isLoggedIn ? (
+        <nav className="view-tabs" aria-label="Choose list">
           <button
-            key={f}
-            className={`filter-btn ${filter === f ? "active" : ""}`}
-            onClick={() => setFilter(f)}
+            className={`view-tab${showReadingListOnly ? "" : " active"}`}
+            aria-current={showReadingListOnly ? undefined : "page"}
+            onClick={() => navigate("/")}
           >
-            {f || "All"}
+            All novels
           </button>
-        ))}
+          <button
+            className={`view-tab${showReadingListOnly ? " active" : ""}`}
+            aria-current={showReadingListOnly ? "page" : undefined}
+            onClick={() => navigate("/?view=readinglist")}
+          >
+            My list <span className="view-tab-count">{listCount}</span>
+          </button>
+        </nav>
+      ) : (
+        <h2 className="list-heading">All novels</h2>
+      )}
+
+      <div className="toolbar">
+        <div className="filter-group">
+          <span className="filter-label">{showReadingListOnly ? "My status" : "Publication"}</span>
+          <div className="filter-bar">
+            {filterOptions.map((f) => (
+              <button
+                key={f.value}
+                className={`filter-btn ${filter === f.value ? "active" : ""}`}
+                aria-pressed={filter === f.value}
+                onClick={() => setFilter(f.value)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {genre && !showReadingListOnly && (
+          <button type="button" className="active-genre" onClick={() => setGenre("")} aria-label={`Remove ${genre} filter`}>
+            Genre: <strong>{genre}</strong> <span aria-hidden="true">✕</span>
+          </button>
+        )}
+
+        {showReadingListOnly && (
+        <div className="search-box">
+          <svg className="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg>
+          <input
+            type="search"
+            className="search-input"
+            placeholder="Search title or author"
+            aria-label="Search novels by title or author"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        )}
       </div>
 
       <div className="table-container">
         <table className="novel-table">
           <thead>
             <tr>
-              <th>Index</th>
+              <th className="cover-th"><span className="visually-hidden">Cover</span></th>
               <th>Title</th>
               <th>Your Score</th>
               <th>Status</th>
@@ -296,36 +319,83 @@ function Homepage() {
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan="4" className="empty-state">
-                  {showReadingListOnly ? "Your reading list is empty." : "No novel found"}
+                  {emptyMessage}
                 </td>
               </tr>
             ) : (
-              filtered.map((n, i) => {
-                const userEntry = userEntries[n._id];
+              filtered.map((n) => {
+                const userEntry = userEntries[n.id];
+                const showProgress =
+                  userEntry && userEntry.status !== "Plan To Read" && userEntry.progress > 0;
+                const progressPct = n.chapterCount
+                  ? Math.min(100, Math.round((userEntry?.progress / n.chapterCount) * 100))
+                  : null;
                 return (
-                  <tr key={n._id}>
-                    <td>{i + 1}</td>
+                  <tr key={n.id}>
+                    <td className="cover-td">
+                      <Link to={`/novel/${n.id}`} tabIndex={-1} aria-hidden="true">
+                        <NovelThumb title={n.title} src={n.coverImage} />
+                      </Link>
+                    </td>
                     <td className="title-td">
-                      <Link to={`/novel/${n._id}`} className="novel-link">
+                      <Link to={`/novel/${n.id}`} className="novel-link">
                         {n.title}
                       </Link>
                       <div className="author">{n.author}</div>
+                      {showProgress && (
+                        <div className="progress">
+                          {progressPct !== null && (
+                            <div
+                              className={`progress-track progress-track--${statusSlug(userEntry.status)}`}
+                              role="progressbar"
+                              aria-valuenow={progressPct}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-label={`${n.title} reading progress`}
+                            >
+                              <div className="progress-fill" style={{ width: `${progressPct}%` }} />
+                            </div>
+                          )}
+                          <span className="progress-text">
+                            {userEntry.progress.toLocaleString()}
+                            {n.chapterCount ? ` / ${n.chapterCount.toLocaleString()}` : ""} c
+                          </span>
+                        </div>
+                      )}
                     </td>
 
-                    <td>{userEntry?.rating ?? "N/A"}</td>
                     <td>
-                      <button
-                        className={
-                          userEntry?.status
-                            ? `status-btn status-btn-${userEntry.status
-                                .split(" ")
-                                .join("-")}`
-                            : "btn"
-                        }
-                        onClick={() => openModal(n)}
-                      >
-                        {userEntry?.status ? userEntry.status : "Add To List"}
-                      </button>
+                      {userEntry?.rating != null ? (
+                        <span className="score">
+                          {userEntry.rating}
+                          <span className="score-star" aria-hidden="true">★</span>
+                        </span>
+                      ) : (
+                        <span className="score-empty" aria-label="No score">—</span>
+                      )}
+                    </td>
+                    <td>
+                      {userEntry?.status ? (
+                        <button
+                          className="status-chip"
+                          onClick={() => openModal(n)}
+                          aria-label={`${userEntry.status}. Edit ${n.title} in your list`}
+                        >
+                          <StatusIcon
+                            status={userEntry.status}
+                            progress={n.chapterCount ? userEntry.progress / n.chapterCount : null}
+                          />
+                          {userEntry.status}
+                        </button>
+                      ) : (
+                        <button
+                          className="add-btn"
+                          onClick={() => openModal(n)}
+                          aria-label={`Add ${n.title} to your list`}
+                        >
+                          <span aria-hidden="true">+</span> Add
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -334,6 +404,8 @@ function Homepage() {
           </tbody>
         </table>
       </div>
+
+      </section>
 
       <AddNovelModal
         open={showModal}

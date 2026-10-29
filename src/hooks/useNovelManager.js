@@ -34,7 +34,7 @@ export function useNovelManager(token) {
         const map = {};
 
         entries.forEach((entry) => {
-          const novelId = entry.novel;
+          const novelId = entry.novelId;
           map[novelId] = entry;
         });
 
@@ -67,7 +67,7 @@ export function useNovelManager(token) {
 
     if (existingEntry) {
       res = await editUserNovelEntry(
-        existingEntry._id,
+        existingEntry.id,
         payload,
         token
       );
@@ -75,7 +75,7 @@ export function useNovelManager(token) {
       res = await createUserNovelEntry(novelId, payload, token);
     }
 
-    // res.novel is the novel ID string on the entry — must NOT be in this chain.
+    // res.novelId is the novel ID string on the entry — must NOT be in this chain.
     // POST returns { userNovel }, PATCH returns { updatedEntry }.
     const userEntry = res.userNovel ?? res.updatedEntry ?? res.entry ?? res;
 

@@ -1,19 +1,30 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
+import PasswordInput from "../components/PasswordInput";
+import useShakeError from "../hooks/useShakeError";
 import "../design/Auth.css";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  // Set by ResetPassword / Signup after success.
+  const { email: prefilledEmail, notice } = useLocation().state ?? {};
+  const [email, setEmail] = useState(prefilledEmail ?? "");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showNotice, setShowNotice] = useState(!!notice);
+  const { error, shaking, fail, clear, shakeProps } = useShakeError();
 
+  // Typing dismisses the notice and any previous error.
+  const edit = (setter) => (e) => {
+    setter(e.target.value);
+    setShowNotice(false);
+    if (error) clear();
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
+    clear();
     const API_URL = import.meta.env.VITE_API_BASE_URL;
     setLoading(true);
 
@@ -25,7 +36,8 @@ export default function Login() {
       localStorage.setItem("displayUsername", response.data.username);
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setShowNotice(false);
+      fail(err.response?.data?.message || "Login failed");
     }
     finally {
       setLoading(false);
@@ -36,36 +48,46 @@ export default function Login() {
       <div className="auth-container">
         <h1 className="auth-title">Sign in</h1>
 
-        <form className="auth-form" onSubmit={handleLogin}>
-          <input
-            type="email"
-            placeholder="Email"
-            className="auth-input"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+        {notice && (
+          <p className={`auth-notice${showNotice ? "" : " auth-notice--hidden"}`} role="status">
+            {notice}
+          </p>
+        )}
 
-          <input
-            type="password"
-            placeholder="Password"
-            className="auth-input"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+        <form className="auth-form" onSubmit={handleLogin}>
+          <div className={`auth-fields${error || shaking ? " auth-fields--invalid" : ""}`} {...shakeProps}>
+            <input
+              type="email"
+              placeholder="Email"
+              className="auth-input"
+              autoComplete="email"
+              required
+              autoFocus={!prefilledEmail}
+              value={email}
+              onChange={edit(setEmail)}
+            />
+
+            <PasswordInput
+              placeholder="Password"
+              autoComplete="current-password"
+              required
+              autoFocus={!!prefilledEmail}
+              value={password}
+              onChange={edit(setPassword)}
+            />
+          </div>
+
+          <p className="auth-error auth-error--center" role="alert">{error}</p>
 
           <p className="auth-forgot">
-            <Link to="/forgot-password" className="auth-link auth-forgot-link">
+            <Link to="/forgot-password" className="auth-link">
               Forgot password?
             </Link>
           </p>
 
-          {error && <p className="auth-error">{error}</p>}
-
           <div className="auth-submit-wrap">
-            <button type="submit" className="auth-submit" disabled={loading}>
-              {loading ? "Signing in..." : "Submit"}
+            <button type="submit" className="auth-submit" disabled={loading || shaking}>
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </div>
         </form>

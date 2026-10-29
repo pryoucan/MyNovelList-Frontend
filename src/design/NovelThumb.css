@@ -1,0 +1,31 @@
+/* Book-shaped cover thumbnail (NovelThumb component).
+   Always 3:4 — the shape of real web-novel covers (e.g. 538×732) — so covers
+   fill the frame without cropping. Each context only sets --thumb-w; height,
+   corner radius and the placeholder letter all scale from it. */
+.novel-thumb {
+  --thumb-w: 54px;
+  display: block;
+  width: var(--thumb-w);
+  height: auto;
+  aspect-ratio: 3 / 4;
+  border-radius: calc(var(--thumb-w) * 0.12);
+  object-fit: cover;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.novel-thumb--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--thumb-w) * 0.42);
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Large cover on the novel page */
+.novel-thumb--lg {
+  --thumb-w: 180px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}

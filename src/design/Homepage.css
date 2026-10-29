@@ -8,147 +8,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 3rem;
+  margin-bottom: 1.75rem;
 }
 
-.user-menu {
-  position: relative;
-}
-
-.user-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #ffffff;
-  border: 1px solid #dcdadb;
-  border-radius: 20px;
-  padding: 6px 14px 6px 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #221f1e;
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.user-trigger:hover {
-  background: #f8f6f5;
-  border-color: #c8c5c3;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.user-avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  background-color: #221f1e;
-  color: #ffffff;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: 50%;
-  line-height: 1;
-  overflow: hidden;
-}
-
-.user-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.user-name {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.user-chevron {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.user-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  left: auto;
-  transform: none;
-
-  margin-top: 0.5rem;
-  min-width: 180px;
-  padding: 6px;
-
-  border: none;
-  border-radius: 16px;
-  background: #ffffff;
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.12);
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  animation: dropdownFadeIn 0.15s ease-out;
-}
-
-.dropdown-item {
-  width: 100%;
-  text-align: left;
-  padding: 10px 14px;
-
-  border: none;
-  background: transparent;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #221f1e;
-  border-radius: 10px;
-  cursor: pointer;
-  box-sizing: border-box;
-  transition: background-color 0.15s ease;
-}
-
-.dropdown-item:hover {
-  background: #f8f6f5;
-}
-
-.dropdown-item-danger {
-  width: 100%;
-  text-align: left;
-  padding: 10px 14px;
-  background: transparent;
-  border: none;
-  color: #c62828;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border-radius: 10px;
-  cursor: pointer;
-  box-sizing: border-box;
-  transition: background-color 0.15s ease;
-}
-
-.dropdown-item-danger:hover {
-  background: #ffebee;
-}
-
-@keyframes dropdownFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.dropdown-item:last-child {
-  border-bottom: none;
-}
 
 .title-container {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.75rem;
 }
 
@@ -170,9 +37,9 @@
 }
 
 .page-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  cursor: pointer;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .page-subtitle {
@@ -295,7 +162,6 @@
   border-radius: 14px;
   padding: 4px;
   gap: 4px;
-  margin-bottom: 2rem;
   border: 1px solid #dcdadb;
 }
 
@@ -420,6 +286,202 @@
   font-size: 0.95rem;
 }
 
+/* ── View tabs: All novels / My list (underline tabs under the header) ── */
+.view-tabs {
+  display: flex;
+  gap: 1.75rem;
+  margin: -0.5rem 0 1.5rem;
+  border-bottom: 1px solid #ecebeb;
+}
+
+.view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: -1px;
+  padding: 0 2px 12px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.95rem;
+  font-weight: 550;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.view-tab:hover {
+  color: #221f1e;
+  border-bottom-color: #d6d3d1;
+}
+
+.view-tab.active {
+  color: #221f1e;
+  border-bottom-color: #221f1e;
+}
+
+.view-tab-count {
+  min-width: 1.25rem;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e7e5e4;
+  color: #57534e;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  text-align: center;
+}
+
+.view-tab.active .view-tab-count {
+  background: #221f1e;
+  color: #fff;
+}
+
+/* ── Toolbar: filters + search ── */
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0 0 1.5rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.filter-label {
+  padding-left: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #888685;
+}
+
+.search-box {
+  position: relative;
+  flex: 0 1 18rem;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #888685;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 2.6rem;
+  padding: 0 12px 0 36px;
+  border: 1px solid #dcdadb;
+  border-radius: 12px;
+  background: #faf9f9;
+  color: #221f1e;
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #221f1e;
+  background: #fff;
+}
+
+/* ── Cover thumbnail (replaces the Index column) ── */
+.novel-table th.cover-th,
+.novel-table td.cover-td {
+  width: 54px;
+  padding-right: 0;
+}
+
+.novel-table td.cover-td a {
+  display: block;
+  line-height: 0;
+  text-decoration: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skeleton-th-spacer {
+  width: 54px;
+  flex-shrink: 0;
+}
+
+.skeleton-cell-cover {
+  width: 54px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 6px;
+}
+
+/* ── Score ── */
+.score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-star {
+  color: #d97706;
+  font-size: 0.8rem;
+}
+
+.score-empty {
+  color: #b5b2b0;
+}
+
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 6.5rem;
+  height: 2rem;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  border: 1px dashed #c8c5c3;
+  background: transparent;
+  color: #5c5957;
+}
+
+.add-btn:hover {
+  border-style: solid;
+  border-color: #221f1e;
+  background: #221f1e;
+  color: #fff;
+}
+
+.add-btn:focus-visible,
+.view-tab:focus-visible,
+.filter-btn:focus-visible {
+  outline: 2px solid #221f1e;
+  outline-offset: 2px;
+}
+
 /* ==========================================
    MOBILE RESPONSIVENESS (TOP TIER MATCHING)
    ========================================== */
@@ -432,9 +494,6 @@
     margin-bottom: 1.25rem;
   }
 
-  .page-title {
-    font-size: 1.15rem;
-  }
 
   /* Filter bar horizontal scroll for mobile */
   .filter-bar {
@@ -513,10 +572,9 @@
     border-bottom: 1px solid #f1eeec;
     display: grid;
     grid-template-areas:
-      "index  status"
-      "title  status"
-      "score  status";
-    grid-template-columns: 1fr auto;
+      "cover  title  status"
+      "cover  score  status";
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     column-gap: 16px;
     row-gap: 4px;
@@ -540,18 +598,14 @@
     color: #221f1e;
   }
 
-  /* Index cell style */
+  /* Cover cell */
   .novel-table td:nth-child(1) {
-    grid-area: index;
-    font-size: 0.75rem !important;
-    font-weight: 600;
-    color: #888685;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    grid-area: cover;
+    align-self: center;
   }
 
-  .novel-table td:nth-child(1)::before {
-    content: "Rank #";
+  .novel-table .novel-thumb {
+    --thumb-w: 46px;
   }
 
   /* Title and Author cell style */
@@ -615,6 +669,23 @@
     align-items: flex-start;
     gap: 0.25rem;
   }
+
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    flex-basis: auto;
+  }
+
+  .add-btn {
+    min-width: 5.5rem;
+    height: 2rem;
+    font-size: 0.75rem;
+    padding: 0 10px;
+  }
 }
 
 /* ── Homepage Skeleton ── */
@@ -623,7 +694,7 @@
   width: 260px;
   height: 44px;
   border-radius: 14px;
-  margin: 1.25rem 0 2rem;
+  margin: 0 0 1.5rem;
 }
 
 .skeleton-table-container {

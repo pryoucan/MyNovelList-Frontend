@@ -1,13 +1,14 @@
+/* The dimmed backdrop is a separate layer that only fades its opacity, which
+   the GPU composites cheaply. (Animating backdrop-filter re-blurs the whole
+   page every frame and made opening feel sluggish.) */
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1100;
-  animation: confirmOverlayFadeIn 0.2s ease-out;
   padding: 20px;
   box-sizing: border-box;
 }
@@ -95,14 +96,23 @@
   transform: scale(0.98);
 }
 
+.confirm-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(28, 25, 23, 0.5);
+  animation: confirmOverlayFadeIn 0.18s ease-out;
+}
+
 @keyframes confirmOverlayFadeIn {
-  from {
-    background: rgba(0, 0, 0, 0);
-    backdrop-filter: blur(0px);
-  }
-  to {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm-overlay::before {
+    animation: none;
   }
 }
 

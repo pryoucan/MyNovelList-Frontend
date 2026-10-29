@@ -1,0 +1,85 @@
+/* Reader-status system, shared by the list, the novel page and the edit modal.
+   Colour budget: hue is reserved for the reader's own status. All five tokens
+   sit at OKLCH L≈0.52 / C≈0.13 so they carry equal visual weight, and each
+   has 5.2–5.9:1 contrast on white (WCAG AA). */
+:root {
+  --status-plan-to-read: #6e6762;
+  --status-reading: #3967b3;
+  --status-on-hold: #975800;
+  --status-completed: #1d7d3e;
+  --status-dropped: #a7463c;
+}
+
+.status-icon {
+  flex-shrink: 0;
+  display: block;
+}
+
+.status-icon--plan-to-read { color: var(--status-plan-to-read); }
+.status-icon--reading      { color: var(--status-reading); }
+.status-icon--on-hold      { color: var(--status-on-hold); }
+.status-icon--completed    { color: var(--status-completed); }
+.status-icon--dropped      { color: var(--status-dropped); }
+
+/* ── Status chip: coloured icon + neutral label, no fill or border ── */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 2rem;
+  padding: 0 10px 0 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #221f1e;
+  font-size: 0.85rem;
+  font-weight: 550;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.status-chip:hover {
+  background: #f5f3f2;
+  border-color: #ecebeb;
+}
+
+.status-chip:focus-visible {
+  outline: 2px solid #221f1e;
+  outline-offset: 2px;
+}
+
+/* ── Reading progress ── */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  max-width: 16rem;
+}
+
+.progress-track {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: #ecebeb;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--status-reading);
+}
+
+.progress-track--plan-to-read .progress-fill { background: var(--status-plan-to-read); }
+.progress-track--on-hold .progress-fill { background: var(--status-on-hold); }
+.progress-track--completed .progress-fill { background: var(--status-completed); }
+.progress-track--dropped .progress-fill { background: var(--status-dropped); }
+
+.progress-text {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}

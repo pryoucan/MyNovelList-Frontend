@@ -10,6 +10,28 @@
   color: #6b7280;
 }
 
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: color 0.15s ease;
+}
+
+.back-link:hover {
+  color: #221f1e;
+}
+
+.back-link:focus-visible {
+  outline: 2px solid #221f1e;
+  outline-offset: 3px;
+}
+
 /* ===============================
    HEADER
 ================================ */
@@ -20,7 +42,7 @@
 
 .novel-header-row {
   display: flex;
-  gap: 1.5rem;
+  gap: 1.75rem;
   align-items: flex-start;
 }
 
@@ -29,51 +51,36 @@
 ================================ */
 
 .novel-cover-slot {
-  width: 160px;
-  height: 230px;
-  border: 1px solid #dcdadb;
-  background: #faf9f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 180px;
+  aspect-ratio: 3 / 4;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
   flex-shrink: 0;
 }
 
-.novel-cover-link {
+.novel-cover-link,
+.iv-trigger.novel-cover-link {
   display: block;
   width: 100%;
   height: 100%;
-  cursor: pointer;
+  border-radius: 16px;
+  cursor: zoom-in;
 }
 
-/* Image */
+/* Bigger zoom hint on the large cover */
+.novel-cover-link .iv-zoom {
+  right: 10px;
+  bottom: 10px;
+  width: 30px;
+  height: 30px;
+}
+
 .novel-cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 16px;
-}
-
-/* Placeholder */
-.novel-cover-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 550;
-  color: #888685;
-  text-align: center;
-  padding: 1rem;
-  line-height: 1.3;
-}
-
-.book-placeholder-icon {
-  color: #a3a19f;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
 /* ===============================
@@ -83,94 +90,196 @@
 .novel-header-text {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
   align-items: flex-start;
+  min-width: 0;
+  flex: 1;
 }
 
 .novel-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #221f1e;
   margin: 0;
+  font-size: 1.6rem;
+  font-weight: 650;
+  line-height: 1.25;
+  color: #221f1e;
 }
 
-.novel-original-title {
-  font-size: 0.875rem;
+.novel-byline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0.35rem 0 0.9rem;
+  font-size: 0.95rem;
   color: #6b7280;
 }
 
-.novel-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  color: #5c5957;
-  margin-top: 0.25rem;
-  margin-bottom: 0.5rem;
+.byline-sep {
+  color: #c8c5c3;
 }
 
-.meta-label {
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.tag-chip {
+  padding: 3px 10px;
+  border: 1px solid #ecebeb;
+  border-radius: 999px;
+  background: #faf9f9;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #5c5957;
+}
+
+/* ===============================
+   YOUR ENTRY CARD
+================================ */
+
+.entry-card {
+  width: 100%;
+  max-width: 30rem;
+  box-sizing: border-box;
+  padding: 1rem 1.15rem;
+  border: 1px solid #ecebeb;
+  border-radius: 16px;
+  background: #fcfbfb;
+}
+
+.entry-card--empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.entry-card-title {
+  font-size: 0.95rem;
   font-weight: 600;
   color: #221f1e;
 }
 
-/* ===============================
-   PUBLICATION LINE
-================================ */
-
-.novel-publish {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
+.entry-card-sub {
+  margin-top: 2px;
+  font-size: 0.82rem;
   color: #6b7280;
 }
 
-.dot {
-  font-size: 0.6rem;
-}
-
-/* ===============================
-   USER INLINE STATUS
-================================ */
-
-.user-novel-inline {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #e5e7eb;
-
+.entry-card-head {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+
+.entry-card-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #888685;
+}
+
+.entry-edit-btn {
+  height: 1.8rem;
+  padding: 0 12px;
+  border: 1px solid #dcdadb;
+  border-radius: 999px;
+  background: #fff;
+  color: #221f1e;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.entry-edit-btn:hover {
+  border-color: #221f1e;
+  background: #faf9f9;
+}
+
+.entry-card-row {
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
-
-  font-size: 0.85rem;
+  gap: 0.75rem 1rem;
 }
 
-.user-label {
+.entry-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.entry-score-value {
+  font-size: 0.8rem;
   color: #6b7280;
-  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
-.user-meta {
-  color: #374151;
-  font-weight: 500;
-  background: #f3f4f6;
-  padding: 4px 10px;
-  border-radius: 8px;
+.entry-score-value {
+  min-width: 5.5rem; /* room for "8.5 / 10 ✓ Saved" so the stars don't shift */
+}
+
+.entry-score-hover strong {
+  color: #b45309;
+}
+
+.entry-score-saved {
+  color: var(--status-completed);
+  font-weight: 600;
+}
+
+.entry-score-error {
+  color: var(--status-dropped);
+  font-weight: 600;
+}
+
+.entry-score .star-preview {
+  display: none; /* the value text beside the stars already updates */
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.entry-score-value strong {
+  font-size: 0.95rem;
+  color: #221f1e;
+}
+
+.entry-muted {
+  font-size: 0.85rem;
+  color: #888685;
+}
+
+.progress.entry-progress {
+  max-width: none;
+  margin-top: 0.85rem;
 }
 
 /* Add to list button */
 .add-to-list-btn {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 42px;
-  padding: 0 20px;
+  gap: 6px;
+  height: 40px;
+  padding: 0 18px;
   background-color: #221f1e;
   color: #ffffff;
   border: none;
-  border-radius: 14px;
+  border-radius: 12px;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -185,70 +294,194 @@
   transform: scale(0.98);
 }
 
-/* Status Indicators on detail page */
-.status-btn-Completed,
-.status-btn-Reading,
-.status-btn-Plan-To-Read,
-.status-btn-Dropped,
-.status-btn-On-Hold {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 26px;
-  font-size: 0.75rem;
-  font-weight: 550;
-  border-radius: 8px;
-  padding: 0 10px;
-  background: #faf9f9;
-  border: 1px solid #dcdadb;
-  color: #221f1e;
-  box-sizing: border-box;
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
-}
-
-.status-btn-Completed:hover,
-.status-btn-Reading:hover,
-.status-btn-Plan-To-Read:hover,
-.status-btn-Dropped:hover,
-.status-btn-On-Hold:hover {
-  background-color: #f0eeec;
-  border-color: #c8c5c3;
-}
-
-.status-btn-Completed:active,
-.status-btn-Reading:active,
-.status-btn-Plan-To-Read:active,
-.status-btn-Dropped:active,
-.status-btn-On-Hold:active {
-  transform: scale(0.96);
+.entry-edit-btn:focus-visible,
+.add-to-list-btn:focus-visible,
+.read-more-btn:focus-visible {
+  outline: 2px solid #221f1e;
+  outline-offset: 2px;
 }
 
 /* ===============================
-   MAIN CONTENT
+   CARDS: DETAILS + SYNOPSIS
 ================================ */
 
-.novel-description-card {
+.novel-card {
   background: #ffffff;
   border: 1px solid #dcdadb;
   border-radius: 20px;
-  padding: 1.5rem;
+  padding: 1.5rem 1.75rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
-  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.novel-card:last-of-type {
   margin-bottom: 2rem;
 }
 
 .section-title {
-  font-size: 0.875rem;
+  margin: 0 0 0.9rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #888685;
+}
+
+.novel-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.suggest-edit-link {
+  font-size: 0.82rem;
+  font-weight: 550;
+  color: #5c5957;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.suggest-edit-link:hover {
+  color: #221f1e;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, max-content minmax(0, 1fr));
+  gap: 0.7rem 1.25rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.details-grid dt {
+  color: #6b7280;
+}
+
+.details-grid dd {
+  margin: 0;
+  color: #221f1e;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.pub-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 7px;
+}
+
+/* Same optical size as the 0.9rem label next to it; neutral but not faint */
+.pub-icon {
+  flex-shrink: 0;
+  color: #57534e;
+}
+
+.pub-years {
+  color: #6b7280;
+  font-weight: 400;
 }
 
 .synopsis-text {
-  font-size: 0.875rem;
-  line-height: 1.6;
+  max-width: 70ch;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.7;
   color: #374151;
   white-space: pre-line;
+}
+
+.synopsis-text--clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  overflow: hidden;
+}
+
+.read-more-btn {
+  margin-top: 0.6rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #221f1e;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ===============================
+   LOADING SKELETON (nps = novel page skeleton)
+   Sizes match the real elements so nothing shifts on load.
+================================ */
+
+.nps-back { width: 96px; height: 14px; margin: 2px 0 1.25rem; border-radius: 6px; }
+.nps-cover { width: 180px; aspect-ratio: 3 / 4; flex-shrink: 0; border-radius: 16px; }
+.nps-title { width: min(22rem, 70%); height: 30px; border-radius: 8px; }
+.nps-byline { width: min(14rem, 50%); height: 16px; margin: 0.6rem 0 1rem; border-radius: 6px; }
+
+.nps-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 1.25rem;
+}
+
+.nps-tag { height: 24px; border-radius: 999px; }
+
+.nps-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.nps-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.nps-row:nth-child(2) { justify-content: flex-start; }
+.nps-label { width: 84px; height: 11px; border-radius: 4px; }
+.nps-pill { width: 52px; height: 28px; border-radius: 999px; }
+.nps-status { width: 92px; height: 22px; border-radius: 8px; }
+.nps-stars { width: 220px; max-width: 55%; height: 20px; border-radius: 6px; }
+.nps-bar { width: 100%; height: 6px; border-radius: 999px; }
+
+.nps-section-title { width: 72px; height: 11px; margin-bottom: 1.1rem; border-radius: 4px; }
+
+.nps-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1.25rem;
+}
+
+.nps-detail {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.nps-dt { width: 72px; height: 14px; flex-shrink: 0; border-radius: 4px; }
+.nps-dd { height: 14px; border-radius: 4px; }
+
+.nps-synopsis {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 70ch;
+}
+
+.nps-line { height: 14px; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
 }
 
 /* ===============================
@@ -264,14 +497,50 @@
 
   .novel-header-text {
     align-items: center;
+    width: 100%;
   }
 
-  .novel-meta {
-    align-items: center;
+  .novel-byline,
+  .tag-list {
+    justify-content: center;
   }
 
-  .novel-cover-slot {
-    width: 130px;
-    height: 187px;
+  .entry-card {
+    max-width: none;
+    text-align: left;
+  }
+
+  .details-grid {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
+
+  .nps-details {
+    grid-template-columns: 1fr;
+  }
+
+  .nps-title,
+  .nps-byline {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .nps-tags {
+    justify-content: center;
+  }
+
+  .nps-entry {
+    width: 100%;
+  }
+
+  .novel-card {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .entry-card--empty {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
   }
 }

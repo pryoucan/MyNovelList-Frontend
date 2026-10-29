@@ -10,6 +10,18 @@ button, a, select, input {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Form controls don't inherit the page font by default. */
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Chrome/Safari draw date fields with their own font; match the app and keep digits aligned. */
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
 @keyframes skeletonShimmer {
   0%   { background-position: -400px 0; }
   100% { background-position:  400px 0; }

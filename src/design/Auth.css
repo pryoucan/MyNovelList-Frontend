@@ -36,13 +36,14 @@
 }
 
 .auth-form {
-  margin-top: 3rem;
+  margin-top: 2rem;
   width: 100%;
 }
 
 .auth-input {
   display: block;
-  width: 95%;
+  box-sizing: border-box;
+  width: 100%;
   margin-bottom: 0.75rem;
   padding: 0.6rem 0.8rem;
   font-size: 0.875rem;
@@ -60,12 +61,130 @@
   background: #f9f7f7;
 }
 
-.auth-forgot-link {
+.otp-boxes {
   display: flex;
-  /* BUG 23 FIX: "right" is not a valid value for justify-content/align-items */
-  justify-content: flex-end;
-  align-items: center;
-  font-size: .9rem;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.otp-box {
+  width: 3.25rem;
+  height: 3.25rem;
+  padding: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid #dcdadb;
+  border-radius: 10px;
+  background-color: #faf9f9;
+  color: #221f1e;
+  caret-color: transparent;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.otp-box:focus {
+  outline: none;
+  border-color: #000;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+
+.otp-boxes--invalid .otp-box {
+  border-color: #b91c1c;
+  background-color: #fef2f2;
+}
+
+.otp-boxes--shake,
+.auth-fields[data-shaking] {
+  animation: auth-shake 0.4s ease-in-out;
+}
+
+@keyframes auth-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+/* Reduced motion: a brief fade instead of movement (still fires animationend). */
+@media (prefers-reduced-motion: reduce) {
+  .otp-boxes--shake,
+  .auth-fields[data-shaking] {
+    animation: auth-flash 0.3s ease-in-out;
+  }
+}
+
+@keyframes auth-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.otp-error {
+  min-height: 1.1rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: #b91c1c;
+  text-align: center;
+}
+
+.otp-resend {
+  margin: 0 0 1.25rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.otp-success {
+  color: #15803d;
+  font-weight: 500;
+}
+
+.otp-boxes--success .otp-box,
+.otp-boxes--success .otp-box:disabled {
+  opacity: 1;
+  border-color: #16a34a;
+  background-color: #f0fdf4;
+  color: #15803d;
+  animation: otp-pop 0.35s ease-out both;
+  animation-delay: calc(var(--i) * 70ms);
+}
+
+@keyframes otp-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otp-boxes--success .otp-box,
+  .otp-boxes--success .otp-box:disabled {
+    animation: none;
+  }
+}
+
+.otp-box:disabled {
+  opacity: 0.6;
+}
+
+@media (max-width: 360px) {
+  .otp-boxes {
+    gap: 0.5rem;
+  }
+
+  .otp-box {
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1.25rem;
+  }
+}
+
+.auth-forgot {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  text-align: right;
 }
 
 /* BUG 24 FIX: Added missing classes used by VerifyOtp.jsx */
@@ -101,6 +220,16 @@
   margin-bottom: 0.75rem;
 }
 
+.auth-error--center {
+  min-height: 1rem;
+  margin: 0 0 0.5rem;
+  text-align: center;
+}
+
+.auth-fields--invalid .auth-input {
+  border-color: #b91c1c;
+}
+
 .auth-submit-wrap {
   display: flex;
   justify-content: center;
@@ -126,6 +255,11 @@
   background: #383331;
 }
 
+.auth-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .auth-submit:active {
   transform: scale(0.98);
 }
@@ -137,10 +271,173 @@
   color: #374151;
 }
 
-.auth-link {
+.auth-link,
+.auth-link:visited {
+  color: #221f1e;
+  font-weight: 500;
   text-decoration: none;
 }
 
 .auth-link:hover {
   text-decoration: underline;
+}
+
+/* Password field with show/hide toggle */
+.password-field {
+  position: relative;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.password-field .auth-input.password-field__input {
+  width: 100%;
+  margin-bottom: 0;
+  padding-right: 2.5rem;
+}
+
+.password-field__toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.password-field__toggle:hover:not(:disabled) {
+  color: #221f1e;
+  background: #f0eeee;
+}
+
+.password-field__toggle:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 1px;
+}
+
+.password-field__toggle:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.auth-input--valid,
+.auth-input--valid:focus {
+  border-color: #16a34a;
+}
+
+.auth-input--invalid,
+.auth-input--invalid:focus {
+  border-color: #b91c1c;
+}
+
+.password-field .auth-input:disabled {
+  opacity: 1;
+  background-color: #f0fdf4;
+  color: #15803d;
+}
+
+/* Live password rules */
+.password-rules {
+  list-style: none;
+  margin: -0.25rem 0 1rem;
+  padding: 0 0.1rem;
+}
+
+.password-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  transition: color 0.15s ease;
+}
+
+.password-rule__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: 700;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.password-rule--pending {
+  color: #6b7280;
+}
+
+.password-rule--pending .password-rule__icon {
+  background: #ecebeb;
+  color: #9ca3af;
+}
+
+.password-rule--ok {
+  color: #15803d;
+}
+
+.password-rule--ok .password-rule__icon {
+  background: #16a34a;
+  color: #fff;
+}
+
+.password-rule--fail {
+  color: #b91c1c;
+}
+
+.password-rule--fail .password-rule__icon {
+  background: #b91c1c;
+  color: #fff;
+}
+
+/* Match / success line under the confirm field; space is reserved to avoid layout jumps */
+.password-match {
+  min-height: 1.1rem;
+  margin: -0.4rem 0 0.5rem;
+  padding: 0 0.1rem;
+  font-size: 0.78rem;
+}
+
+.password-match--ok {
+  color: #15803d;
+}
+
+.password-match--fail {
+  color: #b91c1c;
+}
+
+/* Notice on the login page after a reset */
+.auth-notice {
+  margin: -0.5rem 0 0;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.8rem;
+  text-align: center;
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+}
+
+.auth-notice {
+  max-height: 4rem;
+  overflow: hidden;
+  transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease, margin 0.3s ease, border-width 0.3s ease;
+}
+
+.auth-notice--hidden {
+  opacity: 0;
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  border-width: 0;
 }

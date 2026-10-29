@@ -16,8 +16,9 @@ export function useNovelEntry() {
     setCompletedAt(data.completedAt ? data.completedAt.split("T")[0] : null);
   };
 
-  const reset = () => {
-    setStatus("Reading");
+  // Unreleased novels can only be planned, so callers pass "Plan To Read" for them.
+  const reset = (defaultStatus = "Reading") => {
+    setStatus(defaultStatus);
     setProgress(0);
     setRating(null);
     setStartedAt(null);
@@ -37,5 +38,20 @@ export function useNovelEntry() {
     setCompletedAt,
     fill,
     reset,
+  };
+}
+
+// Request body for POST/PATCH /api/users/novels. The backend rejects extra
+// fields for "Plan To Read", and completedAt for anything but "Completed".
+export function buildEntryPayload(entry) {
+  if (entry.status === "Plan To Read") {
+    return { status: entry.status };
+  }
+  return {
+    status: entry.status,
+    progress: entry.progress === "" ? 0 : (entry.progress ?? 0),
+    rating: entry.rating ?? null,
+    startedAt: entry.startedAt ?? null,
+    completedAt: entry.status === "Completed" ? entry.completedAt ?? null : null,
   };
 }

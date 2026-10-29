@@ -1,15 +1,26 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import PasswordInput from "../components/PasswordInput";
+import RuleList from "../components/RuleList";
+import { ruleState } from "../utils/ruleState";
 import "../design/Auth.css";
+
+// Must match the backend's limits in resetPassword.
+const MIN_LENGTH = 8;
+const MAX_LENGTH = 20;
 
 export default function ResetPassword() {
   const resetToken = localStorage.getItem("resetToken");
   const navigate = useNavigate();
+  const email = useLocation().state?.email;
   const [password, setPassword] = useState("");
   const [verifypassword, setverifypassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [updated, setUpdated] = useState(false);
+  // Password the server rejected as identical to the current one.
+  const [rejectedSame, setRejectedSame] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -23,17 +34,24 @@ export default function ResetPassword() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const lengthOk = password.length >= MIN_LENGTH && password.length <= MAX_LENGTH;
+  const isSameAsOld = rejectedSame !== null && password === rejectedSame;
+  const passwordsMatch = verifypassword !== "" && password === verifypassword;
+  const canSubmit = lengthOk && !isSameAsOld && passwordsMatch && !loading && !updated;
+
+  const rules = [
+    { label: `${MIN_LENGTH}–${MAX_LENGTH} characters`, state: ruleState(password, lengthOk) },
+    ...(rejectedSame !== null
+      ? [{ label: "Different from your current password", state: ruleState(password, !isSameAsOld) }]
+      : []),
+  ];
+
+  const confirmStatus = verifypassword === "" ? undefined : passwordsMatch ? "valid" : "invalid";
+
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    if (!canSubmit) return;
     setError("");
-
-    // BUG 19 FIX: Only set loading after the early-return validation passes,
-    // so we never leave loading=true stuck when passwords don't match.
-    if (password !== verifypassword) {
-      setError("Passwords do not match!");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -49,9 +67,17 @@ export default function ResetPassword() {
 
       // BUG 6 FIX: Remove resetToken from localStorage after successful reset
       localStorage.removeItem("resetToken");
-      navigate("/login");
+      setUpdated(true);
+      setTimeout(
+        () => navigate("/login", { state: { email, notice: "Password updated. Sign in with your new password." } }),
+        900
+      );
     } catch (err) {
-      setError(err.response?.data?.message || "Reset failed. Please try again.");
+      if (err.response?.data?.code === "SAME_PASSWORD") {
+        setRejectedSame(password);
+      } else {
+        setError(err.response?.data?.message || "Reset failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -63,30 +89,53 @@ export default function ResetPassword() {
         <h1 className="auth-title">Set new password</h1>
 
         <form className="auth-form" onSubmit={handleResetPassword}>
-          <input
-            type="password"
+          <PasswordInput
             placeholder="Enter a new password"
-            className="auth-input"
+            autoComplete="new-password"
+            maxLength={MAX_LENGTH}
             required
+            autoFocus
+            disabled={updated}
+            status={updated ? "valid" : undefined}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            aria-describedby="password-rules"
           />
 
-          <input
-            type="password"
+          <RuleList id="password-rules" rules={rules} />
+
+          <PasswordInput
             placeholder="Enter your new password again"
-            className="auth-input"
+            autoComplete="new-password"
+            maxLength={MAX_LENGTH}
             required
+            disabled={updated}
+            status={updated ? "valid" : confirmStatus}
             value={verifypassword}
             onChange={(e) => setverifypassword(e.target.value)}
+            aria-describedby="password-match"
           />
 
-          {error && <p className="auth-error">{error}</p>}
+          <p
+            id="password-match"
+            className={`password-match${updated ? " password-match--ok" : confirmStatus === "invalid" ? " password-match--fail" : confirmStatus === "valid" ? " password-match--ok" : ""}`}
+            role="status"
+          >
+            {updated
+              ? "Password updated"
+              : confirmStatus === "invalid"
+                ? "Passwords don't match"
+                : confirmStatus === "valid"
+                  ? "Passwords match"
+                  : ""}
+          </p>
+
+          {error && <p className="auth-error auth-error--center" role="alert">{error}</p>}
 
           <div className="auth-submit-wrap">
             {/* BUG 18 FIX: Disable submit button while loading to prevent double-submit */}
-            <button type="submit" className="auth-submit" disabled={loading}>
-              {loading ? "Saving..." : "Submit"}
+            <button type="submit" className="auth-submit" disabled={!canSubmit}>
+              {updated ? "Updated" : loading ? "Saving..." : "Update password"}
             </button>
           </div>
         </form>

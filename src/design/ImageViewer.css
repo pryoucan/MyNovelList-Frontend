@@ -1,0 +1,144 @@
+/* Clickable thumbnail */
+.iv-trigger {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  line-height: 0;
+  cursor: zoom-in;
+}
+
+.iv-trigger:focus-visible {
+  outline: 2px solid #221f1e;
+  outline-offset: 2px;
+}
+
+.iv-zoom {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(28, 25, 23, 0.72);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.iv-trigger:hover .iv-zoom,
+.iv-trigger:focus-visible .iv-zoom {
+  opacity: 1;
+}
+
+/* Touch screens can't hover: keep the hint visible */
+@media (hover: none) {
+  .iv-zoom {
+    opacity: 1;
+  }
+}
+
+/* Overlay */
+.iv-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 1.25rem 1.25rem;
+  box-sizing: border-box;
+  background: rgba(20, 18, 17, 0.82);
+  animation: ivFade 0.15s ease-out;
+}
+
+@keyframes ivFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iv-overlay {
+    animation: none;
+  }
+}
+
+.iv-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.iv-close:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.iv-close:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.iv-images {
+  display: flex;
+  gap: 1.5rem;
+  max-height: 100%;
+  cursor: default;
+}
+
+.iv-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+}
+
+.iv-img {
+  display: block;
+  height: min(80vh, 900px);
+  max-width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #2a2624;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.iv-images--compare .iv-img {
+  height: min(72vh, 760px);
+}
+
+.iv-caption {
+  color: #f5efe7;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .iv-images--compare {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .iv-img,
+  .iv-images--compare .iv-img {
+    height: auto;
+    width: min(80vw, 420px);
+  }
+}

@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import "../design/NovelPage.css";
+import "../design/status.css";
 import { Header } from "../components/Header";
 import { AddNovelModal } from "../components/AddNovelModal";
+import NovelThumb from "../components/NovelThumb";
+import ViewableImage from "../components/ViewableImage";
+import StarRating from "../components/StarRating";
+import StatusIcon from "../components/StatusIcon";
+import PublicationIcon from "../components/PublicationIcon";
+import { useCurrentUser } from "../hooks/useCurrentUser";
 
 import {
   getUserNovelByNovelId,
@@ -12,9 +19,25 @@ import {
   editUserNovelEntry,
   deleteUserNovelEntry,
 } from "../services/userNovelService";
-import { useNovelEntry } from "../hooks/useNovelEntry";
+import { useNovelEntry, buildEntryPayload } from "../hooks/useNovelEntry";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
+
+const LANGUAGES = { zh: "Chinese (Mandarin)", en: "English" };
+// Synopses longer than this start collapsed.
+const SYNOPSIS_PREVIEW_CHARS = 420;
+
+const statusSlug = (status) => status.toLowerCase().split(" ").join("-");
+
+// Publication facts stay neutral (colour is reserved for the reader's status);
+// PublicationIcon gives each one a shape.
+const PUBLICATION_LABELS = {
+  Ongoing: "Ongoing",
+  Completed: "Finished",
+  Upcoming: "Upcoming",
+  "On Hiatus": "On hiatus",
+  Cancelled: "Cancelled",
+};
 
 function NovelPage() {
   const { novelId } = useParams();
@@ -31,6 +54,11 @@ function NovelPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [coverError, setCoverError] = useState(false);
+  const [synopsisOpen, setSynopsisOpen] = useState(false);
+  const currentUser = useCurrentUser();
+  // Inline rating on the entry card: "idle" | "saving" | "saved" | "error"
+  const [ratingSave, setRatingSave] = useState("idle");
+  const [hoverRating, setHoverRating] = useState(null);
 
   // Hook to manage form state (status, progress, rating, etc.)
   const entryForm = useNovelEntry();
@@ -44,20 +72,37 @@ function NovelPage() {
   const saveEntry = async (payload) => {
     let res;
     if (userNovel) {
-      res = await editUserNovelEntry(userNovel._id, payload, token);
+      res = await editUserNovelEntry(userNovel.id, payload, token);
     } else {
       res = await createUserNovelEntry(novelId, payload, token);
     }
-    // res.novel is the novel ID string on the entry — must NOT be in this chain.
+    // res.novelId is the novel ID string on the entry — must NOT be in this chain.
     // POST returns { userNovel }, PATCH returns { updatedEntry }.
     return res.userNovel ?? res.updatedEntry ?? res.entry ?? res;
   };
 
   const deleteEntry = async () => {
-    await deleteUserNovelEntry(userNovel._id, token);
+    await deleteUserNovelEntry(userNovel.id, token);
   };
 
   const isListMember = !!userNovel;
+
+  // Rate straight from the entry card (same PATCH endpoint as the modal).
+  // Optimistic: show the new score immediately, roll back if the save fails.
+  const quickRate = async (rating) => {
+    const previous = userNovel.rating;
+    setUserNovel((entry) => ({ ...entry, rating }));
+    setRatingSave("saving");
+    try {
+      const res = await editUserNovelEntry(userNovel.id, { rating }, token);
+      setUserNovel(res.updatedEntry ?? { ...userNovel, rating });
+      setRatingSave("saved");
+      setTimeout(() => setRatingSave((state) => (state === "saved" ? "idle" : state)), 1500);
+    } catch {
+      setUserNovel((entry) => ({ ...entry, rating: previous }));
+      setRatingSave("error");
+    }
+  };
 
   // ----------------------------
   // 1. Fetch GLOBAL novel details
@@ -121,7 +166,7 @@ function NovelPage() {
     }
     
     // Reset form to default (Reading, 0 progress)
-    entryForm.reset();
+    entryForm.reset(globalNovel?.publication?.status === "Upcoming" ? "Plan To Read" : "Reading");
     setShowModal(true);
   };
 
@@ -131,35 +176,18 @@ function NovelPage() {
     setShowModal(true);
   };
 
+  // Errors propagate to the modal, which shows them inline.
   const handleSubmit = async () => {
-    try {
-      // BUG 12 FIX: Consistent payload — progress sent as-is, null fields omitted
-      const payload = {
-        status: entryForm.status,
-        progress: entryForm.progress === "" ? 0 : (entryForm.progress ?? 0),
-        rating: entryForm.rating ?? undefined,
-        startedAt: entryForm.startedAt ?? undefined,
-        completedAt: entryForm.completedAt ?? undefined,
-      };
-
-      const saved = await saveEntry(payload);
-      setUserNovel(saved);
-      setShowModal(false);
-    } catch (error) {
-      console.error("Failed to save entry:", error);
-      alert("An error occurred while saving.");
-    }
+    const saved = await saveEntry(buildEntryPayload(entryForm));
+    setUserNovel(saved);
+    setShowModal(false);
   };
 
   const handleDelete = async () => {
     if (!userNovel) return;
-    try {
-      await deleteEntry();
-      setUserNovel(null);
-      setShowModal(false);
-    } catch (error) {
-      console.error("Failed to delete:", error);
-    }
+    await deleteEntry();
+    setUserNovel(null);
+    setShowModal(false);
   };
 
   // ----------------------------
@@ -167,7 +195,7 @@ function NovelPage() {
   // ----------------------------
 
   if (loadingGlobal || loadingUser) {
-    return <div className="page-loading">Loading Book Details...</div>;
+    return <NovelPageSkeleton />;
   }
 
   if (!globalNovel) {
@@ -178,137 +206,222 @@ function NovelPage() {
     <main className="page-container">
       <Header />
 
+      <Link to="/" className="back-link">
+        <span aria-hidden="true">←</span> Back to list
+      </Link>
+
       {/* ================= Header Section ================= */}
       <header className="novel-header">
         <div className="novel-header-row">
           <div className="novel-cover-slot">
             {!coverError && globalNovel.coverImage ? (
-              <a
-                href={globalNovel.coverImage}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="novel-cover-link"
-              >
+              <ViewableImage src={globalNovel.coverImage} title={globalNovel.title} className="novel-cover-link">
                 <img
                   src={globalNovel.coverImage}
                   alt={globalNovel.title}
                   className="novel-cover"
                   onError={() => setCoverError(true)}
                 />
-              </a>
+              </ViewableImage>
             ) : (
-              <div className="novel-cover-placeholder">
-                <svg
-                  className="book-placeholder-icon"
-                  viewBox="0 0 24 24"
-                  width="36"
-                  height="36"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                </svg>
-                <span>No Cover</span>
-              </div>
+              <NovelThumb title={globalNovel.title} size="lg" />
             )}
           </div>
 
           <div className="novel-header-text">
             <h1 className="novel-title">{globalNovel.title}</h1>
-
-            <div className="novel-meta">
-              <div className="meta-item">
-                <span className="meta-label">Author:</span> {globalNovel.author}
-              </div>
-              {globalNovel.genres && globalNovel.genres.length > 0 && (
-                <div className="meta-item">
-                  <span className="meta-label">Tags:</span> {globalNovel.genres.join(", ")}
-                </div>
-              )}
+            <p className="novel-byline">
               {globalNovel.originalTitle && (
-                <div className="meta-item">
-                  <span className="meta-label">Original Title:</span> {globalNovel.originalTitle}
-                </div>
+                <>
+                  <span lang={globalNovel.originalLanguage}>{globalNovel.originalTitle}</span>
+                  <span className="byline-sep" aria-hidden="true">·</span>
+                </>
               )}
-              <div className="meta-item">
-                <span className="meta-label">Language:</span>{" "}
-                {globalNovel.originalLanguage === "zh" ? "Chinese (Mandarin)" : "English"}
-              </div>
-              <div className="meta-item">
-                <span className="meta-label">Status:</span>{" "}
-                {globalNovel.publication?.status || "Unknown"}
-              </div>
-              {globalNovel.publication?.startYear && (
-                <div className="meta-item">
-                  <span className="meta-label">Published:</span>{" "}
-                  {globalNovel.publication.startYear}
-                  {globalNovel.publication.endYear ? ` – ${globalNovel.publication.endYear}` : " – Present"}
-                </div>
-              )}
-              {globalNovel.chapterCount && (
-                <div className="meta-item">
-                  <span className="meta-label">Chapters:</span> {globalNovel.chapterCount}
-                </div>
-              )}
-              <div className="meta-item">
-                <span className="meta-label">Translation:</span>{" "}
-                {globalNovel.isFullyTranslated ? "Completed" : "Incomplete"}
-              </div>
-              {(globalNovel.publishers?.original || globalNovel.publishers?.english) && (
-                <div className="meta-item">
-                  <span className="meta-label">Publishers:</span>{" "}
-                  {[globalNovel.publishers?.original, globalNovel.publishers?.english]
-                    .filter(Boolean)
-                    .join(", ")}
-                </div>
-              )}
-            </div>
+              <span>{globalNovel.author}</span>
+            </p>
 
-            {/* ================= USER ACTIONS AREA ================= */}
+            {globalNovel.genres?.length > 0 && (
+              <ul className="tag-list" aria-label="Tags">
+                {globalNovel.genres.map((genre) => (
+                  <li key={genre} className="tag-chip">{genre}</li>
+                ))}
+              </ul>
+            )}
+
+            {/* ================= USER ENTRY CARD ================= */}
             {!isListMember ? (
-              // If NOT in list, show Add button
-              <button
-                className="add-to-list-btn"
-                onClick={openAddModal}
-              >
-                + Add to My List
-              </button>
-            ) : (
-              // If IN list, show Status/Progress/Score
-              <div className="user-novel-inline">
-                <span className="user-label">My Status</span>
-
-                <button
-                  className={`status-btn-${userNovel.status.replaceAll(
-                    " ",
-                    "-"
-                  )}`}
-                  onClick={openEditModal}
-                >
-                  {userNovel.status}
+              <div className="entry-card entry-card--empty">
+                <div>
+                  <div className="entry-card-title">Not on your list yet</div>
+                  <div className="entry-card-sub">Track your progress and score for this novel.</div>
+                </div>
+                <button className="add-to-list-btn" onClick={openAddModal}>
+                  <span aria-hidden="true">+</span> Add to list
                 </button>
+              </div>
+            ) : (
+              <div className="entry-card">
+                <div className="entry-card-head">
+                  <span className="entry-card-label">On your list</span>
+                  <button className="entry-edit-btn" onClick={openEditModal}>
+                    Edit
+                  </button>
+                </div>
 
-                <span className="user-meta">
-                  {userNovel.progress ?? "0"} / {globalNovel.chapterCount ?? "?"}
-                </span>
+                <div className="entry-card-row">
+                  <button
+                    className="status-chip"
+                    onClick={openEditModal}
+                    aria-label={`${userNovel.status}. Edit your entry`}
+                  >
+                    <StatusIcon
+                      status={userNovel.status}
+                      progress={globalNovel.chapterCount ? (userNovel.progress ?? 0) / globalNovel.chapterCount : null}
+                    />
+                    {userNovel.status}
+                  </button>
 
-                <span className="user-meta">
-                  Score {userNovel.rating ?? "—"}
-                </span>
+                  {/* Plan To Read and unreleased novels can't be rated (the backend rejects it). */}
+                  {userNovel.status === "Plan To Read" || globalNovel.publication?.status === "Upcoming" ? (
+                    <span className="entry-muted">Rate it once you start reading</span>
+                  ) : (
+                    <div className="entry-score">
+                      <span className="visually-hidden" id="entry-rating-label">Your rating</span>
+                      <StarRating
+                        value={userNovel.rating}
+                        onChange={quickRate}
+                        onHoverChange={setHoverRating}
+                        labelledBy="entry-rating-label"
+                        size="sm"
+                      />
+                      <span className="entry-score-value" aria-live="polite">
+                        {hoverRating !== null ? (
+                          <span className="entry-score-hover">
+                            <strong>{hoverRating}</strong> / 10
+                          </span>
+                        ) : ratingSave === "saving" ? (
+                          "Saving…"
+                        ) : ratingSave === "error" ? (
+                          <span className="entry-score-error">Couldn't save</span>
+                        ) : userNovel.rating != null ? (
+                          <>
+                            <strong>{userNovel.rating}</strong> / 10
+                            {ratingSave === "saved" && <span className="entry-score-saved"> ✓ Saved</span>}
+                          </>
+                        ) : (
+                          "Tap a star to rate"
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {userNovel.status !== "Plan To Read" && (
+                  <div className="progress entry-progress">
+                    {globalNovel.chapterCount > 0 && (
+                      <div
+                        className={`progress-track progress-track--${statusSlug(userNovel.status)}`}
+                        role="progressbar"
+                        aria-valuenow={Math.min(100, Math.round(((userNovel.progress ?? 0) / globalNovel.chapterCount) * 100))}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label="Reading progress"
+                      >
+                        <div
+                          className="progress-fill"
+                          style={{ width: `${Math.min(100, ((userNovel.progress ?? 0) / globalNovel.chapterCount) * 100)}%` }}
+                        />
+                      </div>
+                    )}
+                    <span className="progress-text">
+                      {(userNovel.progress ?? 0).toLocaleString()}
+                      {globalNovel.chapterCount ? ` / ${globalNovel.chapterCount.toLocaleString()}` : ""} c
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
       </header>
 
-      {/* ================= Synopsis Card (Full Width) ================= */}
-      <article className="novel-description-card">
-        <h2 className="section-title">Synopsis</h2>
-        <p className="synopsis-text">{globalNovel.synopsis || "No synopsis available."}</p>
+      {/* ================= Details ================= */}
+      <section className="novel-card" aria-labelledby="details-title">
+        <div className="novel-card-head">
+          <h2 className="section-title" id="details-title">Details</h2>
+          {token && (
+            <Link to={`/novel/${novelId}/suggest-edit`} className="suggest-edit-link">
+              {currentUser?.role === "ADMIN" ? "Edit details" : "Suggest an edit"}
+            </Link>
+          )}
+        </div>
+        <dl className="details-grid">
+          <dt>Status</dt>
+          <dd className="pub-status">
+            <PublicationIcon status={globalNovel.publication?.status} />
+            <span className="pub-label">{PUBLICATION_LABELS[globalNovel.publication?.status] ?? "Unknown"}</span>
+            {globalNovel.publication?.startYear && (
+              <span className="pub-years">
+                {" · "}
+                {globalNovel.publication.startYear}
+                {globalNovel.publication.endYear ? ` – ${globalNovel.publication.endYear}` : " – present"}
+              </span>
+            )}
+          </dd>
+
+          {globalNovel.chapterCount > 0 && (
+            <>
+              <dt>Chapters</dt>
+              <dd>{globalNovel.chapterCount.toLocaleString()}</dd>
+            </>
+          )}
+
+          <dt>Language</dt>
+          <dd>{LANGUAGES[globalNovel.originalLanguage] ?? globalNovel.originalLanguage}</dd>
+
+          <dt>Translation</dt>
+          <dd>{globalNovel.isFullyTranslated ? "Fully translated" : "Partially translated"}</dd>
+
+          {(globalNovel.publishers?.original || globalNovel.publishers?.english) && (
+            <>
+              <dt>Publishers</dt>
+              <dd>
+                {[globalNovel.publishers?.original, globalNovel.publishers?.english]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </dd>
+            </>
+          )}
+        </dl>
+      </section>
+
+      {/* ================= Synopsis ================= */}
+      <article className="novel-card" aria-labelledby="synopsis-title">
+        <h2 className="section-title" id="synopsis-title">Synopsis</h2>
+        {globalNovel.synopsis ? (
+          <>
+            <p
+              id="synopsis-text"
+              className={`synopsis-text${
+                globalNovel.synopsis.length > SYNOPSIS_PREVIEW_CHARS && !synopsisOpen ? " synopsis-text--clamped" : ""
+              }`}
+            >
+              {globalNovel.synopsis}
+            </p>
+            {globalNovel.synopsis.length > SYNOPSIS_PREVIEW_CHARS && (
+              <button
+                className="read-more-btn"
+                aria-expanded={synopsisOpen}
+                aria-controls="synopsis-text"
+                onClick={() => setSynopsisOpen((open) => !open)}
+              >
+                {synopsisOpen ? "Show less" : "Read more"}
+              </button>
+            )}
+          </>
+        ) : (
+          <p className="synopsis-text entry-muted">No synopsis available.</p>
+        )}
       </article>
 
       {/* ================= The Modal ================= */}
@@ -333,6 +446,69 @@ function NovelPage() {
         onSubmit={handleSubmit}
         onDelete={handleDelete}
       />
+    </main>
+  );
+}
+
+// Mirrors the real layout (cover, title, tags, entry card, details, synopsis)
+// so the page doesn't jump when the data arrives.
+const SKELETON_TAGS = [52, 74, 60, 86, 58];
+const SKELETON_SYNOPSIS = ["100%", "96%", "98%", "91%", "62%"];
+
+function NovelPageSkeleton() {
+  return (
+    <main className="page-container" aria-busy="true">
+      <Header />
+      <span className="visually-hidden" role="status">Loading novel…</span>
+
+      <div className="skeleton nps-back" />
+
+      <div className="novel-header" aria-hidden="true">
+        <div className="novel-header-row">
+          <div className="skeleton nps-cover" />
+          <div className="novel-header-text">
+            <div className="skeleton nps-title" />
+            <div className="skeleton nps-byline" />
+            <div className="nps-tags">
+              {SKELETON_TAGS.map((w, i) => (
+                <div key={i} className="skeleton nps-tag" style={{ width: w }} />
+              ))}
+            </div>
+            <div className="entry-card nps-entry">
+              <div className="nps-row">
+                <div className="skeleton nps-label" />
+                <div className="skeleton nps-pill" />
+              </div>
+              <div className="nps-row">
+                <div className="skeleton nps-status" />
+                <div className="skeleton nps-stars" />
+              </div>
+              <div className="skeleton nps-bar" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section className="novel-card" aria-hidden="true">
+        <div className="skeleton nps-section-title" />
+        <div className="nps-details">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="nps-detail">
+              <div className="skeleton nps-dt" />
+              <div className="skeleton nps-dd" style={{ width: `${55 + ((i * 17) % 35)}%` }} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="novel-card" aria-hidden="true">
+        <div className="skeleton nps-section-title" />
+        <div className="nps-synopsis">
+          {SKELETON_SYNOPSIS.map((w, i) => (
+            <div key={i} className="skeleton nps-line" style={{ width: w }} />
+          ))}
+        </div>
+      </section>
     </main>
   );
 }
