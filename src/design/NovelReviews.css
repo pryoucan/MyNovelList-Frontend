@@ -81,18 +81,18 @@
   border-radius: 4px;
   padding: 0.08em 0.3em;
   background: #302e2d;
-  color: #fff;
+  color: transparent;
   font: inherit;
-  font-size: 0.88em;
   line-height: inherit;
   cursor: pointer;
 }
+.review-inline-spoiler > span { visibility: hidden; }
 .review-inline-spoiler:hover { background: #4b4745; }
 .review-inline-spoiler--revealed {
   background: #e8e4e1;
   color: #37312e;
-  font-size: inherit;
 }
+.review-inline-spoiler--revealed > span { visibility: visible; }
 .review-inline-spoiler--revealed:hover { background: #ded8d3; }
 .review-editor { display: grid; gap: 0.6rem; margin-bottom: 1.25rem; }
 .review-editor > label { font-size: 0.9rem; font-weight: 600; color: #221f1e; }

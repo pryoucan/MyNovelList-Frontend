@@ -19,7 +19,7 @@ function SpoilerText({ text }) {
       aria-pressed={revealed}
       onClick={() => setRevealed((value) => !value)}
     >
-      {revealed ? text : "Spoiler · click to reveal"}
+      <span aria-hidden={!revealed}>{text}</span>
     </button>
   );
 }
