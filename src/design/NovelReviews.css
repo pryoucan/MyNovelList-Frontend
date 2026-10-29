@@ -37,6 +37,32 @@
   cursor: pointer;
 }
 .review-text-button:disabled { opacity: 0.55; cursor: wait; }
+.review-card-actions { display: inline-flex; align-items: center; gap: 0.8rem; }
+.review-delete-link { color: #a13030; }
+.review-delete-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin-top: 0.8rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 9px;
+  background: #fff4f1;
+  color: #5f312d;
+  font-size: 0.83rem;
+}
+.review-delete-confirm .review-error { flex-basis: 100%; margin: 0; }
+.review-delete-button {
+  border: 0;
+  border-radius: 7px;
+  padding: 0.4rem 0.65rem;
+  background: #a13030;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.review-delete-button:disabled { opacity: 0.6; cursor: wait; }
 .review-list { display: grid; gap: 0.8rem; }
 .review-card {
   border: 1px solid #ece8e5;
@@ -48,26 +74,26 @@
 .review-author-line strong { color: #221f1e; font-size: 0.9rem; }
 .review-own { color: #8b5e3c; font-weight: 600; }
 .review-body { margin: 0.85rem 0 0; color: #37312e; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
-.review-spoiler {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  min-height: 4.5rem;
-  margin-top: 0.85rem;
-  border: 1px dashed #aaa09a;
-  border-radius: 9px;
-  background: repeating-linear-gradient(135deg, #e9e5e1 0, #e9e5e1 5px, #e2ddd9 5px, #e2ddd9 10px);
-  color: #514943;
+.review-inline-spoiler {
+  display: inline;
+  vertical-align: baseline;
+  border: 0;
+  border-radius: 4px;
+  padding: 0.08em 0.3em;
+  background: #302e2d;
+  color: #fff;
   font: inherit;
-  font-size: 0.85rem;
-  font-weight: 650;
+  font-size: 0.88em;
+  line-height: inherit;
   cursor: pointer;
 }
-.review-spoiler:hover { background: #ded7d1; }
-.review-hide { margin-top: 0.75rem; }
-.review-hide + .review-body { margin-top: 0.3rem; }
+.review-inline-spoiler:hover { background: #4b4745; }
+.review-inline-spoiler--revealed {
+  background: #e8e4e1;
+  color: #37312e;
+  font-size: inherit;
+}
+.review-inline-spoiler--revealed:hover { background: #ded8d3; }
 .review-editor { display: grid; gap: 0.6rem; margin-bottom: 1.25rem; }
 .review-editor > label { font-size: 0.9rem; font-weight: 600; color: #221f1e; }
 .review-editor textarea {
@@ -84,13 +110,48 @@
   line-height: 1.5;
 }
 .review-editor-options { font-size: 0.8rem; color: #77716e; }
-.review-spoiler-choice { display: inline-flex; align-items: center; gap: 0.45rem; color: #3c3531; cursor: pointer; }
-.review-spoiler-choice input { accent-color: #221f1e; }
+.review-spoiler-format { display: inline-flex; align-items: center; gap: 0.35rem; }
+.review-help-wrap { position: relative; display: inline-flex; }
+.review-help-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  border: 1px solid #9d9691;
+  border-radius: 50%;
+  background: #fff;
+  color: #514b48;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: help;
+}
+.review-help-tip {
+  position: absolute;
+  z-index: 5;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  width: min(15rem, 70vw);
+  box-sizing: border-box;
+  padding: 0.55rem 0.7rem;
+  border-radius: 7px;
+  background: #221f1e;
+  color: #fff;
+  line-height: 1.4;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 12px #0002;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.review-help-wrap:hover .review-help-tip,
+.review-help-wrap:focus-within .review-help-tip { visibility: visible; opacity: 1; }
 .review-editor-hint { margin: 0; }
 .review-actions { justify-content: flex-start; }
 .review-error { color: #9f2525; font-size: 0.85rem; }
 .review-signin a { color: #221f1e; font-weight: 600; }
-.review-primary:focus-visible, .review-text-button:focus-visible, .review-spoiler:focus-visible, .review-editor textarea:focus-visible {
+.review-primary:focus-visible, .review-text-button:focus-visible, .review-delete-button:focus-visible, .review-help-icon:focus-visible, .review-inline-spoiler:focus-visible, .review-editor textarea:focus-visible {
   outline: 2px solid #221f1e;
   outline-offset: 2px;
 }

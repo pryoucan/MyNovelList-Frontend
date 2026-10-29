@@ -16,3 +16,7 @@ export const editNovelReview = async (novelId, data) => {
   const response = await axios.patch(`${base}/${novelId}/reviews/mine`, data, { withCredentials: true });
   return response.data.review;
 };
+
+export const deleteNovelReview = async (novelId) => {
+  await axios.delete(`${base}/${novelId}/reviews/mine`, { withCredentials: true });
+};
