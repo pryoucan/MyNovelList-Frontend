@@ -574,7 +574,7 @@
     grid-template-areas:
       "cover  title  status"
       "cover  score  status";
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     column-gap: 16px;
     row-gap: 4px;
@@ -611,6 +611,8 @@
   /* Title and Author cell style */
   .novel-table td:nth-child(2) {
     grid-area: title;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .title-td .novel-link {

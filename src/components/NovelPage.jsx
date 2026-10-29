@@ -72,9 +72,9 @@ function NovelPage() {
   const saveEntry = async (payload) => {
     let res;
     if (userNovel) {
-      res = await editUserNovelEntry(userNovel.id, payload, token);
+      res = await editUserNovelEntry(userNovel.id, payload);
     } else {
-      res = await createUserNovelEntry(novelId, payload, token);
+      res = await createUserNovelEntry(novelId, payload);
     }
     // res.novelId is the novel ID string on the entry — must NOT be in this chain.
     // POST returns { userNovel }, PATCH returns { updatedEntry }.
@@ -82,7 +82,7 @@ function NovelPage() {
   };
 
   const deleteEntry = async () => {
-    await deleteUserNovelEntry(userNovel.id, token);
+    await deleteUserNovelEntry(userNovel.id);
   };
 
   const isListMember = !!userNovel;
@@ -94,7 +94,7 @@ function NovelPage() {
     setUserNovel((entry) => ({ ...entry, rating }));
     setRatingSave("saving");
     try {
-      const res = await editUserNovelEntry(userNovel.id, { rating }, token);
+      const res = await editUserNovelEntry(userNovel.id, { rating });
       setUserNovel(res.updatedEntry ?? { ...userNovel, rating });
       setRatingSave("saved");
       setTimeout(() => setRatingSave((state) => (state === "saved" ? "idle" : state)), 1500);
@@ -134,7 +134,7 @@ function NovelPage() {
 
     const fetchUserNovel = async () => {
       try {
-        const data = await getUserNovelByNovelId(novelId, token);
+        const data = await getUserNovelByNovelId(novelId);
         setUserNovel(data);
       } catch (err) {
         // BUG 21 FIX: Distinguish 401 (auth error) from 404 (not in list)
@@ -152,7 +152,7 @@ function NovelPage() {
     };
 
     fetchUserNovel();
-  }, [novelId, token]);
+  }, [novelId, token, navigate]);
 
   // ----------------------------
   // 3. Modal & Action Handlers

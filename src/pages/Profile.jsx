@@ -174,8 +174,7 @@ export default function Profile() {
       try {
         const [res, entries] = await Promise.all([
           axios.get(`${API_URL}/api/auth/me`, { withCredentials: true }),
-          getUserNovelEntries(localStorage.getItem("displayUsername")).catch(() => null),
-          new Promise((r) => setTimeout(r, 600)),
+          getUserNovelEntries().catch(() => null),
         ]);
         setUser(res.data.user);
         setCurrentUser(res.data.user);

@@ -542,7 +542,7 @@
 /* Sits on the tab row, right-aligned */
 .suggest-link {
   position: absolute;
-  top: -4px;
+  top: -12px;
   right: 0;
   display: inline-flex;
   align-items: center;
@@ -610,6 +610,18 @@
 ================================ */
 
 @media (max-width: 600px) {
+  .suggest-link {
+    position: static;
+    display: flex;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 0 1.25rem auto;
+  }
+
+  .home-hero-actions {
+    flex-wrap: wrap;
+  }
+
   .home-hero-banner {
     min-height: 19rem;
     border-radius: 22px;
