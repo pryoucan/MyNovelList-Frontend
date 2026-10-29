@@ -365,6 +365,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+.community-rating {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+}
+
+.community-rating-value { white-space: nowrap; }
+.community-rating-value span { color: #d97706; }
+.community-rating-count { color: #6b7280; font-size: 0.82rem; font-weight: 400; }
+
 .pub-status {
   display: flex;
   align-items: center;

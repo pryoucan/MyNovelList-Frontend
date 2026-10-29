@@ -573,6 +573,7 @@
     display: grid;
     grid-template-areas:
       "cover  title  status"
+      "cover  community  status"
       "cover  score  status";
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
@@ -628,9 +629,9 @@
     margin-top: 2px;
   }
 
-  /* Score cell style */
+  /* Community score cell style */
   .novel-table td:nth-child(3) {
-    grid-area: score;
+    grid-area: community;
     font-size: 0.825rem !important;
     font-weight: 500;
     color: #5c5957;
@@ -638,16 +639,35 @@
   }
 
   .novel-table td:nth-child(3)::before {
+    content: "Community: ";
+    font-weight: 500;
+    color: #888685;
+  }
+
+  /* Personal score cell style */
+  .novel-table td:nth-child(4) {
+    grid-area: score;
+    font-size: 0.825rem !important;
+    font-weight: 500;
+    color: #5c5957;
+  }
+
+  .novel-table td:nth-child(4)::before {
     content: "My Score: ";
     font-weight: 500;
     color: #888685;
   }
 
   /* Status Button cell style */
-  .novel-table td:nth-child(4) {
+  .novel-table td:nth-child(5) {
     grid-area: status;
     justify-self: end;
     align-self: center;
+  }
+
+  .novel-table td.empty-state {
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
   }
 
   .status-btn-Completed,

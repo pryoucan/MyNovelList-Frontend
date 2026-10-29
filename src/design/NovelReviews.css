@@ -71,7 +71,9 @@
   background: #fdfcfb;
 }
 .review-author-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; }
-.review-author-line strong { color: #221f1e; font-size: 0.9rem; }
+.review-author-link { color: #221f1e; font-size: 0.9rem; font-weight: 700; text-decoration: none; }
+.review-author-link:hover { text-decoration: underline; }
+.review-author-link:focus-visible { outline: 2px solid #221f1e; outline-offset: 2px; }
 .review-own { color: #8b5e3c; font-weight: 600; }
 .review-body { margin: 0.85rem 0 0; color: #37312e; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
 .review-inline-spoiler {

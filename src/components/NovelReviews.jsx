@@ -36,7 +36,7 @@ function ReviewCard({ review, own, onEdit, onDelete }) {
     <article className="review-card">
       <div className="review-card-head">
         <div className="review-author-line">
-          <strong>{review.username}</strong>
+          <Link to={`/profile/${encodeURIComponent(review.username)}`} className="review-author-link">{review.username}</Link>
           {own && <span className="review-own">You</span>}
           <span className="review-date">{dateLabel(review.createdAt)}</span>
           {review.editedAt && <span className="review-edited" title={`Edited ${dateLabel(review.editedAt)}`}>(edited)</span>}

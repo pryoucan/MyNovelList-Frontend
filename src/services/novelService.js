@@ -26,3 +26,9 @@ export const getNovelStats = async () => {
         return [];
     }
 };
+
+export const getNovelStatsById = async (novelId) => {
+    const API_URL = import.meta.env.VITE_API_BASE_URL;
+    const response = await axios.get(`${API_URL}/api/novels/${novelId}/stats`);
+    return response.data.stats;
+};

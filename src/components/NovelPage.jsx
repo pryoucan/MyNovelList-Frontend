@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -13,6 +13,7 @@ import StatusIcon from "../components/StatusIcon";
 import PublicationIcon from "../components/PublicationIcon";
 import NovelReviews from "../components/NovelReviews";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import { getNovelStatsById } from "../services/novelService";
 
 import {
   getUserNovelByNovelId,
@@ -47,6 +48,8 @@ function NovelPage() {
 
   const [globalNovel, setGlobalNovel] = useState(null);
   const [userNovel, setUserNovel] = useState(null);
+  const [communityStats, setCommunityStats] = useState(null);
+  const statsRequest = useRef(0);
 
   const [loadingGlobal, setLoadingGlobal] = useState(true);
   // No token means there's no user entry to fetch — start false to avoid a
@@ -87,6 +90,18 @@ function NovelPage() {
   };
 
   const isListMember = !!userNovel;
+  const community = communityStats?.novelId === novelId ? communityStats : null;
+
+  const refreshCommunityScore = useCallback(() => {
+    const requestId = ++statsRequest.current;
+    getNovelStatsById(novelId)
+      .then((stats) => { if (requestId === statsRequest.current) setCommunityStats(stats); })
+      .catch(() => { if (requestId === statsRequest.current) setCommunityStats({ novelId, unavailable: true }); });
+  }, [novelId]);
+
+  useEffect(() => {
+    refreshCommunityScore();
+  }, [refreshCommunityScore]);
 
   // Rate straight from the entry card (same PATCH endpoint as the modal).
   // Optimistic: show the new score immediately, roll back if the save fails.
@@ -97,6 +112,7 @@ function NovelPage() {
     try {
       const res = await editUserNovelEntry(userNovel.id, { rating });
       setUserNovel(res.updatedEntry ?? { ...userNovel, rating });
+      refreshCommunityScore();
       setRatingSave("saved");
       setTimeout(() => setRatingSave((state) => (state === "saved" ? "idle" : state)), 1500);
     } catch {
@@ -180,6 +196,7 @@ function NovelPage() {
   // Errors propagate to the modal, which shows them inline.
   const handleSubmit = async () => {
     const saved = await saveEntry(buildEntryPayload(entryForm));
+    if ((saved.rating ?? null) !== (userNovel?.rating ?? null)) refreshCommunityScore();
     setUserNovel(saved);
     setShowModal(false);
   };
@@ -187,6 +204,7 @@ function NovelPage() {
   const handleDelete = async () => {
     if (!userNovel) return;
     await deleteEntry();
+    if (userNovel.rating != null) refreshCommunityScore();
     setUserNovel(null);
     setShowModal(false);
   };
@@ -357,6 +375,23 @@ function NovelPage() {
           )}
         </div>
         <dl className="details-grid">
+          <dt>Community score</dt>
+          <dd className="community-rating">
+            {community?.unavailable ? (
+              <span>Unavailable</span>
+            ) : !community ? (
+              <span>Loading…</span>
+            ) : (
+              <>
+                <span className="community-rating-value">
+                  {community.score != null ? <>{community.score} <span aria-hidden="true">★</span> / 10</> : "New"}
+                </span>
+                <span className="community-rating-count">
+                  {community.ratingCount === 0 ? "No ratings yet" : `Rated by ${community.ratingCount} ${community.ratingCount === 1 ? "reader" : "readers"}`}
+                </span>
+              </>
+            )}
+          </dd>
           <dt>Status</dt>
           <dd className="pub-status">
             <PublicationIcon status={globalNovel.publication?.status} />

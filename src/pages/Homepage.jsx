@@ -65,11 +65,14 @@ function Homepage() {
   const [search, setSearch] = useState("");
   const [genre, setGenre] = useState("");
   const [stats, setStats] = useState([]);
+  const [statsReady, setStatsReady] = useState(false);
   const listRef = useRef(null);
 
   useEffect(() => {
-    getNovelStats().then(setStats);
+    getNovelStats().then(setStats).finally(() => setStatsReady(true));
   }, []);
+
+  const statsByNovel = new Map(stats.map((item) => [item.novelId, item]));
 
   const scrollToList = () => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -116,13 +119,16 @@ function Homepage() {
   // Errors propagate to the modal, which shows them inline.
   const handleSubmit = async () => {
     if (!selectedNovel) return;
-    await saveEntry(selectedNovel.id, buildEntryPayload(entryForm));
+    const previousRating = currentEntry?.rating ?? null;
+    const saved = await saveEntry(selectedNovel.id, buildEntryPayload(entryForm));
+    if ((saved.rating ?? null) !== previousRating) getNovelStats().then(setStats);
     setShowModal(false);
   };
 
   const handleDelete = async () => {
     if (!currentEntry || !selectedNovel) return;
     await deleteEntry(currentEntry.id, selectedNovel.id);
+    if (currentEntry.rating != null) getNovelStats().then(setStats);
     setShowModal(false);
   };
 
@@ -191,6 +197,7 @@ function Homepage() {
                 <div className="skeleton skeleton-cell-title-line" style={{ width: row.title }} />
                 <div className="skeleton skeleton-cell-title-sub" style={{ width: row.author }} />
               </div>
+              <div className="skeleton skeleton-cell-score" />
               <div className="skeleton skeleton-cell-score" />
               <div className="skeleton skeleton-cell-status" />
             </div>
@@ -311,6 +318,7 @@ function Homepage() {
             <tr>
               <th className="cover-th"><span className="visually-hidden">Cover</span></th>
               <th>Title</th>
+              <th>Community Score</th>
               <th>Your Score</th>
               <th>Status</th>
             </tr>
@@ -318,13 +326,14 @@ function Homepage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan="4" className="empty-state">
+                <td colSpan="5" className="empty-state">
                   {emptyMessage}
                 </td>
               </tr>
             ) : (
               filtered.map((n) => {
                 const userEntry = userEntries[n.id];
+                const community = statsByNovel.get(n.id);
                 const showProgress =
                   userEntry && userEntry.status !== "Plan To Read" && userEntry.progress > 0;
                 const progressPct = n.chapterCount
@@ -364,9 +373,21 @@ function Homepage() {
                       )}
                     </td>
 
-                    <td>
+                    <td className="community-score-cell">
+                      {!statsReady ? (
+                        <span className="score-empty" aria-label="Community score loading">…</span>
+                      ) : community?.score != null ? (
+                        <span className="score" title={`Community score from ${community.ratingCount} ratings`} aria-label={`Community score: ${community.score} out of 10, from ${community.ratingCount} ratings`}>
+                          {community.score}
+                          <span className="score-star" aria-hidden="true">★</span>
+                        </span>
+                      ) : (
+                        <span className="score-empty" title="Community score appears after at least two ratings">New</span>
+                      )}
+                    </td>
+                    <td className="your-score-cell">
                       {userEntry?.rating != null ? (
-                        <span className="score">
+                        <span className="score" aria-label={`Your score: ${userEntry.rating} out of 10`}>
                           {userEntry.rating}
                           <span className="score-star" aria-hidden="true">★</span>
                         </span>
